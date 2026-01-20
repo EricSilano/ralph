@@ -169,32 +169,44 @@ case $mode in
         read -p "How many iterations? " iterations
         echo ""
         echo -e "${CYAN}🚀 Starting Ralph (AFK mode, $iterations iterations)...${NC}"
-        echo -e "${CYAN}🔍 Starting oversight monitor (checks every 10 minutes)...${NC}"
+        echo -e "${CYAN}🔍 Opening oversight monitor in new terminal window...${NC}"
         echo ""
 
-        # Start monitor in background
-        "$SCRIPT_DIR/scripts/ralph-monitor.sh" &
-        MONITOR_PID=$!
-        echo "Monitor started (PID: $MONITOR_PID)"
+        # Start monitor in a new terminal window
+        # Detect platform and open accordingly
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS - use osascript to open new Terminal window
+            osascript -e "tell application \"Terminal\" to do script \"cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'\""
+            echo "✓ Monitor terminal opened"
+        elif command -v gnome-terminal &> /dev/null; then
+            # Linux with gnome-terminal
+            gnome-terminal -- bash -c "cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'; exec bash"
+            echo "✓ Monitor terminal opened"
+        elif command -v xterm &> /dev/null; then
+            # Fallback to xterm
+            xterm -e "cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'" &
+            echo "✓ Monitor terminal opened"
+        else
+            # Fallback: run in background of current terminal
+            echo -e "${YELLOW}⚠ Could not detect terminal emulator. Running monitor in background.${NC}"
+            "$SCRIPT_DIR/scripts/ralph-monitor.sh" &
+            MONITOR_PID=$!
+            echo "Monitor started in background (PID: $MONITOR_PID)"
+        fi
 
-        # Setup cleanup trap to kill monitor when ralph-afk ends
-        cleanup_monitor() {
-            if [[ -n "$MONITOR_PID" ]] && kill -0 "$MONITOR_PID" 2>/dev/null; then
-                echo ""
-                echo -e "${YELLOW}Stopping oversight monitor...${NC}"
-                kill "$MONITOR_PID" 2>/dev/null || true
-                wait "$MONITOR_PID" 2>/dev/null || true
-                echo -e "${GREEN}✓ Monitor stopped${NC}"
-            fi
-        }
-        trap cleanup_monitor EXIT SIGINT SIGTERM
+        echo ""
+        echo -e "${GREEN}You can now see Ralph's progress in this terminal${NC}"
+        echo -e "${GREEN}and oversight monitoring in the other terminal.${NC}"
+        echo ""
 
         # Run ralph-afk (this blocks until completion)
         "$SCRIPT_DIR/scripts/ralph-afk.sh" "$iterations"
 
-        # Cleanup monitor after ralph-afk completes
-        cleanup_monitor
-        trap - EXIT SIGINT SIGTERM
+        # After ralph-afk completes, monitor will continue until manually stopped
+        echo ""
+        echo -e "${YELLOW}Ralph AFK completed!${NC}"
+        echo -e "${YELLOW}Monitor is still running in the other terminal.${NC}"
+        echo -e "${YELLOW}You can close it manually when ready.${NC}"
         ;;
     * )
         echo "Invalid choice. You can run $SCRIPT_DIR/scripts/ralph-once.sh or $SCRIPT_DIR/scripts/ralph-afk.sh manually."

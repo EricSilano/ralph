@@ -119,7 +119,13 @@ cleanup() {
 trap cleanup SIGTERM SIGINT EXIT
 
 ralph_info "🔍 Ralph Monitor started (PID: $$)"
-ralph_info "Checking every 10 minutes for code quality and PRD alignment"
+ralph_info "Waiting 10 minutes before first check to let Ralph make initial progress..."
+echo ""
+
+# Wait 10 minutes before first check
+sleep 600
+
+ralph_info "Starting monitoring checks every 10 minutes for code quality and PRD alignment"
 echo ""
 
 iteration=0
@@ -200,7 +206,7 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
             ralph_warn "PRD adjustment suggested in iteration $iteration"
 
             # Extract PRD adjustment section
-            prd_adjustments=$(echo "$review_output" | sed -n '/### PRD Adjustments Needed/,/### Recommendations/p' | head -n -1)
+            prd_adjustments=$(echo "$review_output" | sed -n '/### PRD Adjustments Needed/,/### Recommendations/p' | sed '$d')
 
             if [[ -n "$prd_adjustments" ]] && [[ "$prd_adjustments" != *"NO_PRD_CHANGES_NEEDED"* ]]; then
                 echo "  🔧 Applying PRD adjustments..." | tee -a "$MONITOR_LOG"
