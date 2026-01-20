@@ -229,11 +229,29 @@ EOF
         # Run ralph-afk (this blocks until completion)
         "$SCRIPT_DIR/scripts/ralph-afk.sh" "$iterations"
 
-        # After ralph-afk completes, monitor will continue until manually stopped
+        # After ralph-afk completes, stop the monitor
         echo ""
         echo -e "${YELLOW}Ralph AFK completed!${NC}"
-        echo -e "${YELLOW}Monitor is still running in the other terminal.${NC}"
-        echo -e "${YELLOW}You can close it manually when ready.${NC}"
+        echo ""
+
+        # Kill monitor gracefully
+        if [[ -f "$PROJECT_ROOT/.ralph-monitor.pid" ]]; then
+            MONITOR_PID=$(cat "$PROJECT_ROOT/.ralph-monitor.pid")
+            if kill -0 "$MONITOR_PID" 2>/dev/null; then
+                echo "Stopping oversight monitor..."
+                kill -TERM "$MONITOR_PID" 2>/dev/null || true
+                sleep 2
+                # Force kill if still running
+                if kill -0 "$MONITOR_PID" 2>/dev/null; then
+                    kill -9 "$MONITOR_PID" 2>/dev/null || true
+                fi
+                echo -e "${GREEN}✓ Monitor stopped${NC}"
+            else
+                echo -e "${YELLOW}Monitor already stopped${NC}"
+            fi
+        else
+            echo -e "${YELLOW}Monitor PID file not found (monitor may have already stopped)${NC}"
+        fi
         ;;
     * )
         echo "Invalid choice. You can run $SCRIPT_DIR/scripts/ralph-once.sh or $SCRIPT_DIR/scripts/ralph-afk.sh manually."
@@ -251,7 +269,12 @@ REVIEW_LOG="$SCRIPT_DIR/review-results.txt"
 FIX_LOG="$SCRIPT_DIR/fix-results.txt"
 MAX_FIX_ITERATIONS=3
 
+# Ensure logs directory exists
+mkdir -p "$SCRIPT_DIR/logs"
+
 echo "Running comprehensive code review..."
+echo "Review log will be saved to: $REVIEW_LOG"
+echo "Fix log will be saved to: $FIX_LOG"
 echo ""
 
 # Get all modified/created files
@@ -261,16 +284,38 @@ untracked_files=$(git ls-files --others --exclude-standard 2>/dev/null || echo "
 
 all_files="$modified_files $staged_files $untracked_files"
 
+# Debug: Show what files were found
+echo "Debug: Checking for files to review..."
+echo "  Modified files: ${modified_files:-none}"
+echo "  Staged files: ${staged_files:-none}"
+echo "  Untracked files: ${untracked_files:-none}"
+echo ""
+
 if [[ -z "$all_files" ]]; then
     echo -e "${YELLOW}⚠ No new or modified files found to review.${NC}"
+    echo ""
+    echo "This is normal if:"
+    echo "  1. Ralph already committed all changes during AFK mode"
+    echo "  2. No changes were made to the codebase"
+    echo ""
+    echo "To review committed changes, you can use:"
+    echo "  git log -1 --stat"
+    echo "  git diff HEAD~1"
+    echo ""
 else
     # Build file list for Claude
     file_refs="@$PRD_FILE @$PROGRESS_FILE"
+    file_count=0
     for file in $all_files; do
         if [[ -f "$file" ]] && [[ "$file" != "$REVIEW_LOG" ]] && [[ "$file" != "$FIX_LOG" ]]; then
             file_refs="$file_refs @$file"
+            file_count=$((file_count + 1))
         fi
     done
+
+    echo "Found $file_count files to review"
+    echo "Files will be passed to Claude with PRD and Progress files"
+    echo ""
 
     # Run review-and-fix loop
     for ((fix_iter=1; fix_iter<=MAX_FIX_ITERATIONS; fix_iter++)); do
@@ -281,9 +326,33 @@ else
         # Load code review prompt from template
         review_prompt=$(ralph_load_template "code-review-prompt.md" "PRD_FILE=$PRD_FILE" "PROGRESS_FILE=$PROGRESS_FILE")
 
+        if [[ -z "$review_prompt" ]]; then
+            echo -e "${RED}✗ Failed to load review prompt template${NC}"
+            echo "Skipping code review step."
+            break
+        fi
+
+        echo "Running Claude code review..."
         review_output=$(claude --dangerously-skip-permissions "$file_refs
 
-$review_prompt")
+$review_prompt" 2>&1)
+
+        review_exit_code=$?
+
+        if [[ $review_exit_code -ne 0 ]]; then
+            echo -e "${RED}✗ Code review command failed (exit code: $review_exit_code)${NC}"
+            echo "Error output:"
+            echo "$review_output" | head -20
+            echo ""
+            echo "Skipping code review step."
+            break
+        fi
+
+        if [[ -z "$review_output" ]]; then
+            echo -e "${YELLOW}⚠ Code review returned no output${NC}"
+            echo "Skipping code review step."
+            break
+        fi
 
         # Save review output
         echo "$review_output" > "$REVIEW_LOG"
@@ -309,9 +378,33 @@ $review_prompt")
         # Load fix prompt from template
         fix_prompt=$(ralph_load_template "fix-prompt.md" "REVIEW_LOG=$REVIEW_LOG")
 
+        if [[ -z "$fix_prompt" ]]; then
+            echo -e "${RED}✗ Failed to load fix prompt template${NC}"
+            echo "Skipping auto-fix step."
+            break
+        fi
+
+        echo "Running Claude auto-fix..."
         fix_output=$(claude --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
-$fix_prompt")
+$fix_prompt" 2>&1)
+
+        fix_exit_code=$?
+
+        if [[ $fix_exit_code -ne 0 ]]; then
+            echo -e "${RED}✗ Auto-fix command failed (exit code: $fix_exit_code)${NC}"
+            echo "Error output:"
+            echo "$fix_output" | head -20
+            echo ""
+            echo "Skipping auto-fix step."
+            break
+        fi
+
+        if [[ -z "$fix_output" ]]; then
+            echo -e "${YELLOW}⚠ Auto-fix returned no output${NC}"
+            echo "Skipping auto-fix step."
+            break
+        fi
 
         echo "$fix_output" > "$FIX_LOG"
         echo "Fix summary:"
