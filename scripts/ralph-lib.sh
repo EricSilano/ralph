@@ -1691,7 +1691,7 @@ export -f ralph_get_output_stats
 # ==============================================================================
 
 # Default prompts directory
-RALPH_TEMPLATES_DIR="${RALPH_TEMPLATES_DIR:-prompts}"
+RALPH_PROMPTS_DIR="${RALPH_PROMPTS_DIR:-prompts}"
 
 # Load a prompt template and replace variables
 # Usage: prompt=$(ralph_load_template "template-name.md" "VAR1=value1" "VAR2=value2")
@@ -1699,7 +1699,7 @@ RALPH_TEMPLATES_DIR="${RALPH_TEMPLATES_DIR:-prompts}"
 ralph_load_template() {
     local template_name="$1"
     shift
-    local template_path="$RALPH_TEMPLATES_DIR/$template_name"
+    local template_path="$RALPH_PROMPTS_DIR/$template_name"
 
     # Check if template exists
     if [[ ! -f "$template_path" ]]; then
@@ -1751,10 +1751,10 @@ ralph_load_template_safe() {
 # List available templates
 # Usage: ralph_list_templates
 ralph_list_templates() {
-    if [[ -d "$RALPH_TEMPLATES_DIR" ]]; then
-        ls -1 "$RALPH_TEMPLATES_DIR"/*.md 2>/dev/null | xargs -n 1 basename
+    if [[ -d "$RALPH_PROMPTS_DIR" ]]; then
+        ls -1 "$RALPH_PROMPTS_DIR"/*.md 2>/dev/null | xargs -n 1 basename
     else
-        ralph_warn "Prompts directory not found: $RALPH_TEMPLATES_DIR"
+        ralph_warn "Prompts directory not found: $RALPH_PROMPTS_DIR"
     fi
 }
 

@@ -13,6 +13,7 @@ export RALPH_LOG_DIR="$SCRIPT_DIR/logs"
 export RALPH_STATUS_FILE="$SCRIPT_DIR/.ralph-status.json"
 export RALPH_STATE_FILE="$SCRIPT_DIR/.ralph-state.json"
 export RALPH_PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
+export RALPH_PROMPTS_DIR="$SCRIPT_DIR/prompts"
 
 # Source ralph library for logging
 if [[ -f "$SCRIPT_DIR/scripts/ralph-lib.sh" ]]; then

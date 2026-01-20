@@ -12,6 +12,7 @@ cd "$PROJECT_ROOT"
 export RALPH_LOG_DIR="$PROJECT_ROOT/logs"
 export RALPH_STATUS_FILE="$PROJECT_ROOT/.ralph-status.json"
 export RALPH_STATE_FILE="$PROJECT_ROOT/.ralph-state.json"
+export RALPH_PROMPTS_DIR="$PROJECT_ROOT/prompts"
 
 # Source ralph library for logging
 if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
