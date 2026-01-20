@@ -14,6 +14,7 @@ echo ""
 # Make all scripts executable
 echo "Making scripts executable..."
 chmod +x "$RALPH_DIR"/*.sh
+chmod +x "$RALPH_DIR"/scripts/*.sh 2>/dev/null || true
 echo "✓ All scripts are now executable"
 echo ""
 
@@ -44,7 +45,8 @@ echo "  1. Restart your terminal, or"
 echo "  2. Run: source $ZSHRC"
 echo ""
 echo "Then you can run Ralph commands like:"
-echo "  ralph-start.sh"
-echo "  ralph-once.sh"
-echo "  ralph-review.sh"
+echo "  ralph-start.sh              # Main entry point"
+echo "  scripts/ralph-once.sh       # Run one task"
+echo "  scripts/ralph-afk.sh 10     # Run 10 iterations"
+echo "  scripts/ralph-review.sh     # Review code"
 echo ""

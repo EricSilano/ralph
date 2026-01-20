@@ -1685,3 +1685,80 @@ export -f ralph_log_full_output
 export -f ralph_extract_output_summary
 export -f ralph_filter_output
 export -f ralph_get_output_stats
+
+# ==============================================================================
+# Template Loading Functions (for Prompts)
+# ==============================================================================
+
+# Default prompts directory
+RALPH_TEMPLATES_DIR="${RALPH_TEMPLATES_DIR:-prompts}"
+
+# Load a prompt template and replace variables
+# Usage: prompt=$(ralph_load_template "template-name.md" "VAR1=value1" "VAR2=value2")
+# Example: prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$desc")
+ralph_load_template() {
+    local template_name="$1"
+    shift
+    local template_path="$RALPH_TEMPLATES_DIR/$template_name"
+
+    # Check if template exists
+    if [[ ! -f "$template_path" ]]; then
+        ralph_error "Template not found: $template_path"
+        return 1
+    fi
+
+    # Load template content
+    local template_content
+    template_content=$(cat "$template_path")
+
+    # Replace each variable
+    for var_assignment in "$@"; do
+        # Split VAR=value
+        local var_name="${var_assignment%%=*}"
+        local var_value="${var_assignment#*=}"
+
+        # Replace {{VAR_NAME}} with value
+        template_content="${template_content//\{\{$var_name\}\}/$var_value}"
+    done
+
+    echo "$template_content"
+}
+
+# Load a template with fallback to inline prompt
+# Usage: prompt=$(ralph_load_template_safe "template.md" "fallback prompt" "VAR1=value1")
+ralph_load_template_safe() {
+    local template_name="$1"
+    local fallback_prompt="$2"
+    shift 2
+
+    # Try to load template
+    local prompt
+    if prompt=$(ralph_load_template "$template_name" "$@" 2>/dev/null); then
+        echo "$prompt"
+    else
+        # Use fallback
+        ralph_debug "Using fallback prompt for $template_name"
+        # Replace variables in fallback too
+        for var_assignment in "$@"; do
+            local var_name="${var_assignment%%=*}"
+            local var_value="${var_assignment#*=}"
+            fallback_prompt="${fallback_prompt//\{\{$var_name\}\}/$var_value}"
+        done
+        echo "$fallback_prompt"
+    fi
+}
+
+# List available templates
+# Usage: ralph_list_templates
+ralph_list_templates() {
+    if [[ -d "$RALPH_TEMPLATES_DIR" ]]; then
+        ls -1 "$RALPH_TEMPLATES_DIR"/*.md 2>/dev/null | xargs -n 1 basename
+    else
+        ralph_warn "Prompts directory not found: $RALPH_TEMPLATES_DIR"
+    fi
+}
+
+# Export template functions
+export -f ralph_load_template
+export -f ralph_load_template_safe
+export -f ralph_list_templates

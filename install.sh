@@ -10,20 +10,15 @@ echo ""
 # Create ralph directory
 mkdir -p "$INSTALL_DIR"
 
-# Copy core scripts
-echo "Copying core scripts..."
+# Copy main entry points
+echo "Copying main scripts..."
 cp "$RALPH_DIR/ralph-start.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-once.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-afk.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-lib.sh" "$INSTALL_DIR/"
+cp "$RALPH_DIR/setup.sh" "$INSTALL_DIR/"
 
-# Copy review scripts
-echo "Copying review scripts..."
-cp "$RALPH_DIR/ralph-review.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-review-file.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-review-diff.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-review-and-fix.sh" "$INSTALL_DIR/"
-cp "$RALPH_DIR/ralph-review-prd.sh" "$INSTALL_DIR/"
+# Copy scripts directory
+echo "Copying scripts directory..."
+mkdir -p "$INSTALL_DIR/scripts"
+cp "$RALPH_DIR/scripts/"*.sh "$INSTALL_DIR/scripts/"
 
 # Copy guidelines if exists
 if [[ -f "$RALPH_DIR/GUIDELINES.md" ]]; then
@@ -31,7 +26,13 @@ if [[ -f "$RALPH_DIR/GUIDELINES.md" ]]; then
     cp "$RALPH_DIR/GUIDELINES.md" "$INSTALL_DIR/"
 fi
 
-# Copy templates directory if exists
+# Copy prompts directory (AI prompt templates)
+if [[ -d "$RALPH_DIR/prompts" ]]; then
+    echo "Copying prompts..."
+    cp -r "$RALPH_DIR/prompts" "$INSTALL_DIR/"
+fi
+
+# Copy templates directory (code templates)
 if [[ -d "$RALPH_DIR/templates" ]]; then
     echo "Copying templates..."
     cp -r "$RALPH_DIR/templates" "$INSTALL_DIR/"
@@ -40,6 +41,7 @@ fi
 # Make all scripts executable
 echo "Making scripts executable..."
 chmod +x "$INSTALL_DIR"/*.sh
+chmod +x "$INSTALL_DIR/scripts/"*.sh 2>/dev/null || true
 
 # Create initial files if they don't exist
 if [[ ! -f "$INSTALL_DIR/PRD.md" ]]; then
@@ -75,25 +77,26 @@ EOF
 echo ""
 echo "✓ Ralph installed successfully to: $INSTALL_DIR"
 echo ""
-echo "📦 Core Scripts:"
+echo "📦 Main Scripts:"
 echo "  ✓ ralph-start.sh       - Interactive setup & full workflow"
+echo "  ✓ setup.sh             - System setup (adds to PATH)"
+echo ""
+echo "📂 Scripts Directory (scripts/):"
 echo "  ✓ ralph-once.sh        - Run single task"
 echo "  ✓ ralph-afk.sh         - Run multiple iterations"
+echo "  ✓ ralph-monitor.sh     - Oversight monitoring"
 echo "  ✓ ralph-lib.sh         - Shared utility library"
+echo "  ✓ ralph-review*.sh     - Code review scripts"
 echo ""
-echo "🔍 Review Scripts:"
-echo "  ✓ ralph-review.sh           - Quick review of modified files"
-echo "  ✓ ralph-review-file.sh      - Review specific files"
-echo "  ✓ ralph-review-diff.sh      - Review git diff"
-echo "  ✓ ralph-review-and-fix.sh   - Auto review & fix loop"
-echo "  ✓ ralph-review-prd.sh       - PRD implementation review"
-echo ""
-echo "📁 Additional Files:"
-if [[ -f "$INSTALL_DIR/GUIDELINES.md" ]]; then
-    echo "  ✓ GUIDELINES.md        - Coding standards"
+echo "📁 Additional Directories:"
+if [[ -d "$INSTALL_DIR/prompts" ]]; then
+    echo "  ✓ prompts/             - AI prompt templates"
 fi
 if [[ -d "$INSTALL_DIR/templates" ]]; then
     echo "  ✓ templates/           - Code templates"
+fi
+if [[ -f "$INSTALL_DIR/GUIDELINES.md" ]]; then
+    echo "  ✓ GUIDELINES.md        - Coding standards"
 fi
 echo "  ✓ PRD.md               - Product requirements"
 echo "  ✓ progress.txt         - Progress tracking"
@@ -108,12 +111,12 @@ echo "  # Or from inside ralph directory:"
 echo "  cd $INSTALL_DIR && ./ralph-start.sh"
 echo ""
 echo "📚 Usage Examples (from project root):"
-echo "  ./$INSTALL_DIR/ralph-start.sh                    # Full interactive workflow"
-echo "  ./$INSTALL_DIR/ralph-once.sh                     # Single task execution"
-echo "  ./$INSTALL_DIR/ralph-afk.sh 10                   # Run 10 iterations"
-echo "  ./$INSTALL_DIR/ralph-review.sh                   # Quick code review"
-echo "  ./$INSTALL_DIR/ralph-review-file.sh src/main.js  # Review specific file"
-echo "  ./$INSTALL_DIR/ralph-review-and-fix.sh 5         # Review & fix with 5 iterations"
+echo "  ./$INSTALL_DIR/ralph-start.sh                        # Full interactive workflow"
+echo "  ./$INSTALL_DIR/scripts/ralph-once.sh                 # Single task execution"
+echo "  ./$INSTALL_DIR/scripts/ralph-afk.sh 10               # Run 10 iterations"
+echo "  ./$INSTALL_DIR/scripts/ralph-review.sh               # Quick code review"
+echo "  ./$INSTALL_DIR/scripts/ralph-review-file.sh src/main.js  # Review specific file"
+echo "  ./$INSTALL_DIR/scripts/ralph-review-and-fix.sh 5     # Review & fix with 5 iterations"
 echo ""
 echo "💡 Tip: Ralph works in your project root but keeps files in $INSTALL_DIR/"
 echo "    All commands can be run from either location."

@@ -15,8 +15,9 @@ export RALPH_STATE_FILE="$SCRIPT_DIR/.ralph-state.json"
 export RALPH_PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 
 # Source ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+if [[ -f "$SCRIPT_DIR/scripts/ralph-lib.sh" ]]; then
+    source "$SCRIPT_DIR/scripts/ralph-lib.sh"
+    ralph_setup_logging
 fi
 
 PRD_FILE="$SCRIPT_DIR/PRD.md"
@@ -76,21 +77,10 @@ echo ""
 echo -e "${YELLOW}Step 2: Generating detailed PRD...${NC}"
 echo ""
 
-claude -p "You are a technical product manager. Based on this brief description, create a detailed PRD (Product Requirements Document) in Markdown format.
+# Load PRD generation prompt from template
+prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
-USER DESCRIPTION:
-$description
-
-Create a PRD with:
-1. **Project Overview** - Clear summary of what we're building
-2. **Tech Stack** - Recommended technologies (keep it simple)
-3. **Features** - Numbered list of features, ordered by priority
-4. **Tasks** - Break each feature into small, implementable tasks with checkboxes [ ]
-5. **Success Criteria** - How do we know it's done?
-6. Tests should be written as the last task on the PDR. So after all coding is done, write the tests and iterate fixes if needed.
-
-Keep tasks small and atomic (1-2 hours of work max each).
-Output ONLY the PRD content, no explanations." > "$PRD_FILE"
+claude -p "$prd_prompt" > "$PRD_FILE"
 
 echo -e "${GREEN}✓ PRD generated!${NC}"
 echo ""
@@ -134,20 +124,11 @@ while true; do
             echo "---"
             description+=$'\n'"Additional details: "$extra
             echo -e "${YELLOW}Regenerating PRD...${NC}"
-            claude -p "You are a technical product manager. Based on this description, create a detailed PRD.
 
-USER DESCRIPTION:
-$description
+            # Load PRD generation prompt from template (reuse same template)
+            prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
-Create a PRD with:
-1. **Project Overview** - Clear summary
-2. **Tech Stack** - Recommended technologies
-3. **Features** - Numbered list by priority
-4. **Tasks** - Small, implementable tasks with checkboxes [ ]
-5. **Success Criteria** - Definition of done
-6. Tests should be written as the last task on the PDR. So after all coding is done, write the tests and iterate fixes if needed
-
-Keep tasks atomic. Output ONLY the PRD content." > "$PRD_FILE"
+            claude -p "$prd_prompt" > "$PRD_FILE"
             echo ""
             cat "$PRD_FILE"
             echo ""
@@ -181,17 +162,41 @@ case $mode in
         echo ""
         echo -e "${CYAN}🚀 Starting Ralph (babysitting mode)...${NC}"
         echo ""
-        "$SCRIPT_DIR/ralph-once.sh"
+        "$SCRIPT_DIR/scripts/ralph-once.sh"
         ;;
     2 )
         read -p "How many iterations? " iterations
         echo ""
         echo -e "${CYAN}🚀 Starting Ralph (AFK mode, $iterations iterations)...${NC}"
+        echo -e "${CYAN}🔍 Starting oversight monitor (checks every 10 minutes)...${NC}"
         echo ""
-        "$SCRIPT_DIR/ralph-afk.sh" "$iterations"
+
+        # Start monitor in background
+        "$SCRIPT_DIR/scripts/ralph-monitor.sh" &
+        MONITOR_PID=$!
+        echo "Monitor started (PID: $MONITOR_PID)"
+
+        # Setup cleanup trap to kill monitor when ralph-afk ends
+        cleanup_monitor() {
+            if [[ -n "$MONITOR_PID" ]] && kill -0 "$MONITOR_PID" 2>/dev/null; then
+                echo ""
+                echo -e "${YELLOW}Stopping oversight monitor...${NC}"
+                kill "$MONITOR_PID" 2>/dev/null || true
+                wait "$MONITOR_PID" 2>/dev/null || true
+                echo -e "${GREEN}✓ Monitor stopped${NC}"
+            fi
+        }
+        trap cleanup_monitor EXIT SIGINT SIGTERM
+
+        # Run ralph-afk (this blocks until completion)
+        "$SCRIPT_DIR/scripts/ralph-afk.sh" "$iterations"
+
+        # Cleanup monitor after ralph-afk completes
+        cleanup_monitor
+        trap - EXIT SIGINT SIGTERM
         ;;
     * )
-        echo "Invalid choice. You can run $SCRIPT_DIR/ralph-once.sh or $SCRIPT_DIR/ralph-afk.sh manually."
+        echo "Invalid choice. You can run $SCRIPT_DIR/scripts/ralph-once.sh or $SCRIPT_DIR/scripts/ralph-afk.sh manually."
         exit 0
         ;;
 esac
@@ -233,40 +238,12 @@ else
         echo ""
 
         # Run code review
+        # Load code review prompt from template
+        review_prompt=$(ralph_load_template "code-review-prompt.md" "PRD_FILE=$PRD_FILE" "PROGRESS_FILE=$PROGRESS_FILE")
+
         review_output=$(claude --dangerously-skip-permissions "$file_refs
 
-You are an expert code reviewer and software architect.
-
-Review the implementation against the PRD requirements and code quality standards:
-
-1. **PRD Completeness**: Are all required tasks implemented?
-2. **Code Quality**: Best practices, readability, maintainability
-3. **Bugs & Issues**: Logic errors, edge cases, potential failures
-4. **Security**: Vulnerabilities, unsafe patterns, input validation
-5. **Performance**: Inefficiencies, optimization opportunities
-6. **Testing**: Test coverage, missing tests
-7. **Documentation**: Code comments, README, user docs
-
-For each issue found:
-- Severity: CRITICAL, HIGH, MEDIUM, LOW
-- File and line number (if applicable)
-- Clear description
-- Specific fix recommendation
-
-If NO issues are found and implementation is complete, respond with: <promise>NO_ISSUES</promise>
-
-Format:
-## Summary
-[Brief overview]
-
-## Issues Found
-### [Severity] - [File:Line]
-**Issue**: [Description]
-**Fix**: [Suggestion]
-
-## Recommendations
-[General improvements]
-")
+$review_prompt")
 
         # Save review output
         echo "$review_output" > "$REVIEW_LOG"
@@ -289,39 +266,12 @@ Format:
         echo -e "${CYAN}Applying fixes automatically...${NC}"
         echo ""
 
+        # Load fix prompt from template
+        fix_prompt=$(ralph_load_template "fix-prompt.md" "REVIEW_LOG=$REVIEW_LOG")
+
         fix_output=$(claude --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
-You are an expert software engineer.
-
-A code review found issues in the implementation.
-Review the findings in $REVIEW_LOG and fix ALL issues.
-
-Priority:
-1. Fix CRITICAL issues first
-2. Fix HIGH severity issues
-3. Fix MEDIUM and LOW issues
-4. Improve code quality based on recommendations
-
-For each fix:
-1. Read and understand the code
-2. Implement the fix properly
-3. Verify the fix works (syntax check, basic validation)
-4. Update tests if needed
-
-After fixing all issues, update progress.txt with:
-- What issues were fixed
-- What files were modified
-- Verification results
-
-Provide a summary:
-## Fixes Applied
-- [File:Line] - [Issue fixed]
-
-## Verification
-- [How you verified fixes work]
-
-If all fixes are applied successfully, end with: <promise>FIXES_COMPLETE</promise>
-")
+$fix_prompt")
 
         echo "$fix_output" > "$FIX_LOG"
         echo "Fix summary:"

@@ -1,0 +1,28 @@
+# PRD Update Prompt Template
+
+This template is used by `ralph-monitor.sh` to update the PRD based on oversight review findings.
+
+## Template Variables
+
+- `{{PRD_FILE}}` - Path to PRD.md
+- `{{PROGRESS_FILE}}` - Path to progress.txt
+- `{{PRD_ADJUSTMENTS}}` - The adjustment recommendations from the review
+
+---
+
+## Prompt
+
+You are updating the PRD based on oversight review findings.
+
+**Oversight Review Findings**:
+{{PRD_ADJUSTMENTS}}
+
+**Task**:
+Update the PRD ({{PRD_FILE}}) to incorporate the suggested adjustments.
+- Keep existing structure
+- Add clarity where needed
+- Add missing requirements
+- Update tasks if necessary
+- Preserve completed work
+
+Make the changes surgically - don't rewrite the entire PRD, just adjust what needs adjusting.

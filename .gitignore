@@ -1,0 +1,18 @@
+# Ralph logs directory
+logs/
+*.log
+
+# Ralph state files
+.ralph-status.json
+.ralph-state.json
+.ralph-monitor.pid
+
+# Temporary files
+*.tmp
+*~
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
