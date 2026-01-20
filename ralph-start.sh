@@ -176,8 +176,32 @@ case $mode in
         # Detect platform and open accordingly
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS - use osascript to open new Terminal window
-            osascript -e "tell application \"Terminal\" to do script \"cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'\""
-            echo "✓ Monitor terminal opened"
+            echo "Opening new macOS Terminal window for monitor..."
+
+            # The terminal will stay open even if monitor exits
+            osascript <<EOF >/dev/null 2>&1
+tell application "Terminal"
+    do script "cd '$PROJECT_ROOT' && clear && echo '═══════════════════════════════════════════════' && echo '🔍 RALPH OVERSIGHT MONITOR' && echo '═══════════════════════════════════════════════' && echo '' && '$SCRIPT_DIR/scripts/ralph-monitor.sh' || (echo ''; echo 'ERROR: Monitor failed to start'; echo 'Press any key to close'; read -n 1)"
+    activate
+end tell
+EOF
+
+            # Give Terminal.app time to open and come to foreground
+            sleep 1
+
+            echo ""
+            echo "✓ Monitor terminal opened!"
+            echo ""
+            echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
+            echo -e "${GREEN}║  📺 LOOK FOR THE NEW TERMINAL.APP WINDOW!            ║${NC}"
+            echo -e "${GREEN}║                                                        ║${NC}"
+            echo -e "${GREEN}║  A separate Terminal window should have opened with    ║${NC}"
+            echo -e "${GREEN}║  the Ralph Monitor. Check your other windows/spaces.   ║${NC}"
+            echo -e "${GREEN}║                                                        ║${NC}"
+            echo -e "${GREEN}║  If you don't see it, press Cmd+Tab to find it.       ║${NC}"
+            echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+            read -p "Press Enter when you see the monitor window..."
         elif command -v gnome-terminal &> /dev/null; then
             # Linux with gnome-terminal
             gnome-terminal -- bash -c "cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'; exec bash"
