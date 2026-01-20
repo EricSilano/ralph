@@ -11,6 +11,12 @@ echo "Ralph directory: $RALPH_DIR"
 echo "Target file: $ZSHRC"
 echo ""
 
+# Make all scripts executable
+echo "Making scripts executable..."
+chmod +x "$RALPH_DIR"/*.sh
+echo "✓ All scripts are now executable"
+echo ""
+
 # Create .zshrc if it doesn't exist
 if [[ ! -f "$ZSHRC" ]]; then
     echo "Creating $ZSHRC..."
