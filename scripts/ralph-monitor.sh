@@ -118,7 +118,10 @@ cleanup() {
 
 trap cleanup SIGTERM SIGINT EXIT
 
-ralph_info "🔍 Ralph Monitor started (PID: $$)"
+# Get project name for display
+PROJECT_NAME="${RALPH_PROJECT_NAME:-$(basename "$PROJECT_ROOT")}"
+
+ralph_info "🔍 Ralph Monitor started (PID: $$) - Project: $PROJECT_NAME"
 ralph_info "Waiting 10 minutes before first check to let Ralph make initial progress..."
 echo ""
 
@@ -134,8 +137,8 @@ while true; do
     iteration=$((iteration + 1))
     timestamp=$(date +"%Y-%m-%d %H:%M:%S")
 
-    echo -e "${CYAN}[$timestamp] Monitor Check #$iteration${NC}" | tee -a "$MONITOR_LOG"
-    ralph_info "Starting monitor iteration $iteration"
+    echo -e "${CYAN}[$timestamp] Monitor Check #$iteration - $PROJECT_NAME${NC}" | tee -a "$MONITOR_LOG"
+    ralph_info "Starting monitor iteration $iteration for project: $PROJECT_NAME"
 
     # Get recent changes
     modified_files=$(git diff --name-only HEAD 2>/dev/null || echo "")

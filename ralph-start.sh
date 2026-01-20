@@ -178,10 +178,13 @@ case $mode in
             # macOS - use osascript to open new Terminal window
             echo "Opening new macOS Terminal window for monitor..."
 
+            # Get project name from PROJECT_ROOT
+            PROJECT_NAME=$(basename "$PROJECT_ROOT")
+
             # The terminal will stay open even if monitor exits
             osascript <<EOF >/dev/null 2>&1
 tell application "Terminal"
-    do script "cd '$PROJECT_ROOT' && clear && echo '═══════════════════════════════════════════════' && echo '🔍 RALPH OVERSIGHT MONITOR' && echo '═══════════════════════════════════════════════' && echo '' && '$SCRIPT_DIR/scripts/ralph-monitor.sh' || (echo ''; echo 'ERROR: Monitor failed to start'; echo 'Press any key to close'; read -n 1)"
+    do script "cd '$PROJECT_ROOT' && clear && echo '═══════════════════════════════════════════════' && echo '🔍 RALPH OVERSIGHT MONITOR - $PROJECT_NAME' && echo '═══════════════════════════════════════════════' && echo '' && export RALPH_PROJECT_NAME='$PROJECT_NAME' && '$SCRIPT_DIR/scripts/ralph-monitor.sh' || (echo ''; echo 'ERROR: Monitor failed to start'; echo 'Press any key to close'; read -n 1)"
     activate
 end tell
 EOF
