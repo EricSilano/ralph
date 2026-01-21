@@ -50,42 +50,7 @@ echo -e "${CYAN}🧑‍💻 Ralph Wiggum - Interactive Setup${NC}"
 echo "==========================================="
 echo ""
 
-# Check if skipping PRD generation
-if [[ "$SKIP_PRD" == "true" ]]; then
-    if [[ ! -f "$PRD_FILE" ]]; then
-        echo -e "${YELLOW}⚠ Warning: --skip-prd flag set but no PRD file found at:${NC}"
-        echo "  $PRD_FILE"
-        echo ""
-        read -p "Continue without a PRD? [y/N]: " continue_without_prd
-        case $continue_without_prd in
-            [Yy]* )
-                echo "Continuing without PRD..."
-                # Create minimal PRD
-                echo "# PRD - No specific requirements provided" > "$PRD_FILE"
-                echo "" >> "$PRD_FILE"
-                echo "Started without PRD generation on $(date)" >> "$PRD_FILE"
-                ;;
-            * )
-                echo "Please create a PRD.md file in the ralph directory or run without --skip-prd flag."
-                exit 1
-                ;;
-        esac
-    else
-        echo -e "${GREEN}✓ Using existing PRD file:${NC}"
-        echo "  $PRD_FILE"
-        echo ""
-        echo -e "${CYAN}Current PRD:${NC}"
-        echo "==========================================="
-        cat "$PRD_FILE"
-        echo ""
-        echo "==========================================="
-        echo ""
-        read -p "Press Enter to continue with this PRD..."
-    fi
-fi
-
 # Step 1: Get brief description from user
-if [[ "$SKIP_PRD" != "true" ]]; then
 echo -e "${YELLOW}Step 1: What do you want to build?${NC}"
 echo ""
 echo "Choose input method:"
@@ -98,6 +63,7 @@ read -p "Your choice [1]: " input_choice
 input_choice=${input_choice:-1}
 
 description=""
+SKIP_PRD=false
 
 case $input_choice in
     2)
@@ -209,7 +175,6 @@ $improvements"
         echo "---"
         ;;
 esac
-fi  # End of Step 1 conditional
 
 if [[ -z "$description" ]] && [[ "$SKIP_PRD" != "true" ]]; then
     echo "No description provided. Exiting."
