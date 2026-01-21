@@ -1,9 +1,10 @@
 #!/bin/bash
 # ralph-stop-monitor.sh - Stop the running oversight monitor
 
-# Get script directory and project root
+# Get script directory, ralph folder, and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RALPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$RALPH_DIR/.." && pwd)"
 
 # Colors
 GREEN='\033[0;32m'
@@ -11,7 +12,8 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-MONITOR_PID_FILE="$PROJECT_ROOT/.ralph-monitor.pid"
+# PID file is in ralph folder
+MONITOR_PID_FILE="$RALPH_DIR/.ralph-monitor.pid"
 
 echo "🛑 Stopping Ralph Monitor..."
 echo ""

@@ -26,4 +26,7 @@ Create a PRD with:
 6. Tests should be written as the last task on the PRD. So after all coding is done, write the tests and iterate fixes if needed.
 
 Keep tasks small and atomic (1-2 hours of work max each).
-Output ONLY the PRD content, no explanations.
+
+**IMPORTANT: Output the PRD content directly to stdout. DO NOT create any files or use any tools. The calling script will capture your output and save it to ralph/PRD.md automatically.**
+
+Output ONLY the PRD markdown content, no explanations or commentary.

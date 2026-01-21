@@ -3,19 +3,21 @@
 
 set -e
 
-# Get script directory and project root
+# Get script directory, ralph folder, and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RALPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$RALPH_DIR/.." && pwd)"
 
 # Work in project root for file operations
 cd "$PROJECT_ROOT"
 
-# Set up logging environment
-export RALPH_LOG_DIR="$SCRIPT_DIR/logs"
+# Set up logging environment (logs are in ralph folder)
+export RALPH_LOG_DIR="$RALPH_DIR/logs"
 
-PRD_FILE="${1:-$SCRIPT_DIR/PRD.md}"
-PROGRESS_FILE="${2:-$SCRIPT_DIR/progress.txt}"
-REVIEW_LOG="$SCRIPT_DIR/prd-review.txt"
+# PRD.md and progress.txt are always inside the ralph folder (not project root)
+PRD_FILE="${1:-$RALPH_DIR/PRD.md}"
+PROGRESS_FILE="${2:-$RALPH_DIR/progress.txt}"
+REVIEW_LOG="$RALPH_DIR/prd-review.txt"
 
 # Colors
 GREEN='\033[0;32m'

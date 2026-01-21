@@ -49,6 +49,7 @@ if [[ -f "$SCRIPT_DIR/scripts/ralph-lib.sh" ]]; then
     ralph_setup_logging
 fi
 
+# PRD.md and progress.txt are always inside the ralph folder (not project root)
 PRD_FILE="$SCRIPT_DIR/PRD.md"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 
@@ -269,7 +270,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
     prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
     ralph_info "Generating PRD from your description..."
-    claude --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
+    claude -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
 
     echo -e "${GREEN}✓ PRD generated!${NC}"
     echo ""
@@ -318,7 +319,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
                 prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
                 ralph_info "Regenerating PRD with additional details..."
-                claude --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
+                claude -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
                 echo ""
                 cat "$PRD_FILE"
                 echo ""

@@ -28,3 +28,5 @@ Update the PRD ({{PRD_FILE}}) to incorporate the suggested adjustments.
 - Preserve completed work
 
 Make the changes surgically - don't rewrite the entire PRD, just adjust what needs adjusting.
+
+**IMPORTANT: Output the complete updated PRD content directly to stdout. DO NOT create any files or use any tools. The calling script will capture your output and save it to ralph/PRD.md automatically.**

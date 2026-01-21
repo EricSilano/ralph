@@ -19,19 +19,20 @@ for arg in "$@"; do
     esac
 done
 
-# Get script directory and project root
+# Get script directory, ralph folder, and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RALPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$RALPH_DIR/.." && pwd)"
 
 # Work in project root for git operations
 cd "$PROJECT_ROOT"
 
-# Set up logging environment
-export RALPH_LOG_DIR="$PROJECT_ROOT/logs"
-export RALPH_STATUS_FILE="$PROJECT_ROOT/.ralph-status.json"
-export RALPH_STATE_FILE="$PROJECT_ROOT/.ralph-state.json"
-export RALPH_MONITOR_PID_FILE="$PROJECT_ROOT/.ralph-monitor.pid"
-export RALPH_PROMPTS_DIR="$PROJECT_ROOT/prompts"
+# Set up logging environment (logs and state files are in ralph folder)
+export RALPH_LOG_DIR="$RALPH_DIR/logs"
+export RALPH_STATUS_FILE="$RALPH_DIR/.ralph-status.json"
+export RALPH_STATE_FILE="$RALPH_DIR/.ralph-state.json"
+export RALPH_MONITOR_PID_FILE="$RALPH_DIR/.ralph-monitor.pid"
+export RALPH_PROMPTS_DIR="$RALPH_DIR/prompts"
 
 # Source ralph library for logging
 if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
@@ -39,11 +40,13 @@ if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
     ralph_setup_logging
 fi
 
-PRD_FILE="$PROJECT_ROOT/PRD.md"
-PROGRESS_FILE="$PROJECT_ROOT/progress.txt"
-MONITOR_LOG="$PROJECT_ROOT/logs/ralph-monitor.log"
+# PRD.md and progress.txt are always inside the ralph folder (not project root)
+PRD_FILE="$RALPH_DIR/PRD.md"
+PROGRESS_FILE="$RALPH_DIR/progress.txt"
+MONITOR_LOG="$RALPH_DIR/logs/ralph-monitor.log"
+# Context files are in project root (not ralph folder)
 CONTEXT_DIR="$PROJECT_ROOT/context"
-PROMPTS_DIR="$PROJECT_ROOT/prompts"
+PROMPTS_DIR="$RALPH_DIR/prompts"
 MONITOR_TEMPLATE="$PROMPTS_DIR/monitor-review-prompt.md"
 
 # Colors for output
@@ -237,9 +240,9 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
                     "PROGRESS_FILE=$PROGRESS_FILE" \
                     "PRD_ADJUSTMENTS=$prd_adjustments")
 
-                # Let Claude update the PRD with context
+                # Let Claude update the PRD with context (use -p for print mode to output to stdout)
                 ralph_info "Updating PRD based on oversight review..."
-                claude --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
+                claude -p --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
 
                 echo -e "${GREEN}  ✓ PRD updated${NC}" | tee -a "$MONITOR_LOG"
                 ralph_info "PRD updated based on oversight review"
