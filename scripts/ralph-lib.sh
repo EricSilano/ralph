@@ -1756,19 +1756,45 @@ ralph_claude() {
     local log_file
     log_file=$(ralph_get_full_output_log_path)
 
+    # Check if claude command exists
+    if ! command -v claude &>/dev/null; then
+        ralph_error "claude command not found in PATH"
+        return 1
+    fi
+
     if [[ "$capture_mode" == "true" ]]; then
         # Capture mode: collect output for return value
         local output
+        local exit_code
+
+        ralph_debug "Calling claude with ${#claude_args[@]} arguments"
+
         if [[ "$verbose" -ge 2 ]]; then
             # Verbose: show AND capture
             # Use a temp file to avoid process substitution issues
             local temp_out=$(mktemp)
             claude "${claude_args[@]}" 2>&1 | tee "$temp_out"
+            exit_code=${PIPESTATUS[0]}
             output=$(cat "$temp_out")
             rm -f "$temp_out"
         else
             # Not verbose: silent capture
             output=$(claude "${claude_args[@]}" 2>&1)
+            exit_code=$?
+        fi
+
+        # Check for errors
+        if [[ $exit_code -ne 0 ]]; then
+            ralph_error "Claude command failed with exit code $exit_code"
+            ralph_log_full_output "$session_id" 0 "ERROR: Exit code $exit_code\n$output"
+            echo "$output" >&2
+            return $exit_code
+        fi
+
+        # Check if output is empty
+        if [[ -z "$output" || "${#output}" -lt 10 ]]; then
+            ralph_warn "Claude returned empty or very short output (${#output} bytes)"
+            ralph_debug "Output: '$output'"
         fi
 
         # Always log to file regardless of verbosity
@@ -1781,10 +1807,20 @@ ralph_claude() {
         if [[ "$verbose" -ge 2 ]]; then
             # Full verbose: show everything in real-time
             claude "${claude_args[@]}" 2>&1 | tee -a "$log_file"
+            return ${PIPESTATUS[0]}
         elif [[ "$verbose" -eq 1 ]]; then
             # Filtered: collect, show summary, log full
             local output
             output=$(claude "${claude_args[@]}" 2>&1)
+            local exit_code=$?
+
+            if [[ $exit_code -ne 0 ]]; then
+                ralph_error "Claude command failed with exit code $exit_code"
+                ralph_log_full_output "$session_id" 0 "ERROR: Exit code $exit_code\n$output"
+                echo "$output" >&2
+                return $exit_code
+            fi
+
             ralph_log_full_output "$session_id" 0 "$output"
 
             # Show filtered summary
@@ -1792,6 +1828,7 @@ ralph_claude() {
         else
             # Silent: only log to file
             claude "${claude_args[@]}" >> "$log_file" 2>&1
+            return $?
         fi
     fi
 }
