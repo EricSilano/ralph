@@ -1,6 +1,8 @@
-Analyze this codebase and create general context documentation (max 300 lines).
+Explore and analyze the codebase in the current working directory. Create general context documentation (max 300 lines).
 
-IMPORTANT: Be extremely concise. Focus only on what's essential. Skip verbose descriptions and obvious information.
+IMPORTANT:
+- Use your tools to explore the codebase (Glob, Read, Grep)
+- Be extremely concise. Focus only on what's essential. Skip verbose descriptions and obvious information.
 
 Focus on:
 - Project overview and purpose

@@ -1,6 +1,8 @@
-Analyze this codebase and create a concise architecture document (max 300 lines).
+Explore and analyze the codebase in the current working directory. Create a concise architecture document (max 300 lines).
 
-IMPORTANT: Be extremely concise. Focus only on what's essential. Skip obvious details, boilerplate, and verbose explanations.
+IMPORTANT:
+- Use your tools to explore the codebase (Glob, Read, Grep)
+- Be extremely concise. Focus only on what's essential. Skip obvious details, boilerplate, and verbose explanations.
 
 Focus on:
 - High-level system structure and components

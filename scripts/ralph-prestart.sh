@@ -3,20 +3,21 @@ set -e
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RALPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$RALPH_DIR/.." && pwd)"
 
 # Work in project root
 cd "$PROJECT_ROOT"
 
 # Set up logging environment
-export RALPH_LOG_DIR="$PROJECT_ROOT/logs"
-export RALPH_STATUS_FILE="$PROJECT_ROOT/.ralph-status.json"
-export RALPH_STATE_FILE="$PROJECT_ROOT/.ralph-state.json"
-export RALPH_PROMPTS_DIR="$PROJECT_ROOT/prompts"
+export RALPH_LOG_DIR="$RALPH_DIR/logs"
+export RALPH_STATUS_FILE="$RALPH_DIR/.ralph-status.json"
+export RALPH_STATE_FILE="$RALPH_DIR/.ralph-state.json"
+export RALPH_PROMPTS_DIR="$RALPH_DIR/prompts"
 
 # Source ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+if [[ -f "$RALPH_DIR/scripts/ralph-lib.sh" ]]; then
+    source "$RALPH_DIR/scripts/ralph-lib.sh"
     ralph_setup_logging
 fi
 
@@ -37,28 +38,29 @@ general_prompt=$(ralph_load_template "general-context-prompt.md")
 # Create context directory if it doesn't exist
 mkdir -p "$CONTEXT_DIR"
 
-# Run 3 claude instances in parallel (capture output to avoid interactive prompts)
+# Run 3 claude instances sequentially (must be sequential for file creation)
+# Use -p (print mode) which skips workspace trust dialog and runs non-interactively
 ralph_info "Generating context/ARCHITECTURE.md..."
-(result1=$(claude --dangerously-skip-permissions "$arch_prompt" 2>&1)) &
-pid1=$!
+claude -p --dangerously-skip-permissions "$arch_prompt" > /dev/null 2>&1
+[[ -f "$ARCH_FILE" ]] && ralph_info "✓ ARCHITECTURE.md created" || ralph_warn "✗ ARCHITECTURE.md not found"
 
 ralph_info "Generating context/BUSINESS_RULES.md..."
-(result2=$(claude --dangerously-skip-permissions "$rules_prompt" 2>&1)) &
-pid2=$!
+claude -p --dangerously-skip-permissions "$rules_prompt" > /dev/null 2>&1
+[[ -f "$RULES_FILE" ]] && ralph_info "✓ BUSINESS_RULES.md created" || ralph_warn "✗ BUSINESS_RULES.md not found"
 
 ralph_info "Generating context/GENERAL.md..."
-(result3=$(claude --dangerously-skip-permissions "$general_prompt" 2>&1)) &
-pid3=$!
-
-# Wait for all to complete
-ralph_info "Waiting for analysis to complete..."
-wait $pid1 $pid2 $pid3
+claude -p --dangerously-skip-permissions "$general_prompt" > /dev/null 2>&1
+[[ -f "$GENERAL_FILE" ]] && ralph_info "✓ GENERAL.md created" || ralph_warn "✗ GENERAL.md not found"
 
 ralph_info "All analysis complete"
 
 # Check if files were created successfully
 if [[ ! -f "$ARCH_FILE" ]] || [[ ! -f "$RULES_FILE" ]] || [[ ! -f "$GENERAL_FILE" ]]; then
     ralph_error "One or more context files failed to generate"
+    ralph_error "Expected files:"
+    ralph_error "  - $ARCH_FILE"
+    ralph_error "  - $RULES_FILE"
+    ralph_error "  - $GENERAL_FILE"
     exit 1
 fi
 
@@ -67,7 +69,7 @@ index_prompt=$(ralph_load_template "context-index-prompt.md")
 
 # Generate CLAUDE.md index file
 ralph_info "Generating context/CLAUDE.md index..."
-result=$(claude --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt" 2>&1)
+echo "2" | claude --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt"
 
 if [[ -f "$INDEX_FILE" ]]; then
     ralph_info "Context documentation complete!"

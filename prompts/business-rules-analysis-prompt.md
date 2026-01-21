@@ -1,6 +1,8 @@
-Analyze this codebase and extract business rules and domain logic (max 300 lines).
+Explore and analyze the codebase in the current working directory. Extract business rules and domain logic (max 300 lines).
 
-IMPORTANT: Be extremely concise. Focus only on what's essential. Skip verbose explanations and implementation details.
+IMPORTANT:
+- Use your tools to explore the codebase (Glob, Read, Grep)
+- Be extremely concise. Focus only on what's essential. Skip verbose explanations and implementation details.
 
 Focus on:
 - Core business logic and rules
