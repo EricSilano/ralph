@@ -13,9 +13,10 @@ cd "$PROJECT_ROOT"
 export RALPH_LOG_DIR="$RALPH_ROOT/logs"
 export RALPH_PROMPTS_DIR="$RALPH_ROOT/prompts"
 
-# Source ralph library for template loading
+# Source ralph library for logging
 if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
     source "$SCRIPT_DIR/ralph-lib.sh"
+    ralph_setup_logging
 else
     echo "Error: ralph-lib.sh not found. Please ensure Ralph is properly installed."
     exit 1
@@ -45,19 +46,10 @@ PROJECT_NAME=$(basename "$PROJECT_ROOT")
 echo -e "${YELLOW}Step 1: Analyzing codebase architecture...${NC}"
 echo ""
 
-# Create architecture documentation
 echo "Generating ARCHITECTURE.md..."
-
-# Load architecture analysis prompt from template
-arch_prompt=$(ralph_load_template "architecture-analysis-prompt.md")
-
-if [[ -z "$arch_prompt" ]]; then
-    echo -e "${RED}✗ Failed to load architecture analysis prompt template${NC}"
-    exit 1
-fi
-
 ralph_info "Analyzing codebase architecture (this may take a minute)..."
-claude --dangerously-skip-permissions "$arch_prompt" > "$CONTEXT_DIR/ARCHITECTURE.md" 2>&1
+
+claude --dangerously-skip-permissions "@$RALPH_PROMPTS_DIR/architecture-analysis-prompt.md" > "$CONTEXT_DIR/ARCHITECTURE.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/ARCHITECTURE.md" ]] && [[ -s "$CONTEXT_DIR/ARCHITECTURE.md" ]]; then
     echo -e "${GREEN}✓ ARCHITECTURE.md created${NC}"
@@ -69,19 +61,10 @@ echo ""
 echo -e "${YELLOW}Step 2: Extracting business rules...${NC}"
 echo ""
 
-# Create business rules documentation
 echo "Generating BUSINESS_RULES.md..."
-
-# Load business rules analysis prompt from template
-business_prompt=$(ralph_load_template "business-rules-analysis-prompt.md")
-
-if [[ -z "$business_prompt" ]]; then
-    echo -e "${RED}✗ Failed to load business rules analysis prompt template${NC}"
-    exit 1
-fi
-
 ralph_info "Extracting business rules and domain logic..."
-claude --dangerously-skip-permissions "$business_prompt" > "$CONTEXT_DIR/BUSINESS_RULES.md" 2>&1
+
+claude --dangerously-skip-permissions "@$RALPH_PROMPTS_DIR/business-rules-analysis-prompt.md" > "$CONTEXT_DIR/BUSINESS_RULES.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/BUSINESS_RULES.md" ]] && [[ -s "$CONTEXT_DIR/BUSINESS_RULES.md" ]]; then
     echo -e "${GREEN}✓ BUSINESS_RULES.md created${NC}"
@@ -93,19 +76,10 @@ echo ""
 echo -e "${YELLOW}Step 3: Creating general context...${NC}"
 echo ""
 
-# Create general documentation
 echo "Generating GENERAL.md..."
-
-# Load general context prompt from template
-general_prompt=$(ralph_load_template "general-context-prompt.md")
-
-if [[ -z "$general_prompt" ]]; then
-    echo -e "${RED}✗ Failed to load general context prompt template${NC}"
-    exit 1
-fi
-
 ralph_info "Creating general project context documentation..."
-claude --dangerously-skip-permissions "$general_prompt" > "$CONTEXT_DIR/GENERAL.md" 2>&1
+
+claude --dangerously-skip-permissions "@$RALPH_PROMPTS_DIR/general-context-prompt.md" > "$CONTEXT_DIR/GENERAL.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/GENERAL.md" ]] && [[ -s "$CONTEXT_DIR/GENERAL.md" ]]; then
     echo -e "${GREEN}✓ GENERAL.md created${NC}"
@@ -117,30 +91,15 @@ echo ""
 echo -e "${YELLOW}Step 4: Generating context index (CLAUDE.md)...${NC}"
 echo ""
 
-# Create CLAUDE.md index file
 echo "Generating CLAUDE.md..."
-
-# Build context files content
-context_content="$(cat "$CONTEXT_DIR/ARCHITECTURE.md" 2>/dev/null || echo "Not available")
-
----
-
-$(cat "$CONTEXT_DIR/BUSINESS_RULES.md" 2>/dev/null || echo "Not available")
-
----
-
-$(cat "$CONTEXT_DIR/GENERAL.md" 2>/dev/null || echo "Not available")"
-
-# Load context index prompt from template
-index_prompt=$(ralph_load_template "context-index-prompt.md" "PROJECT_NAME=$PROJECT_NAME" "CONTEXT_FILES_CONTENT=$context_content")
-
-if [[ -z "$index_prompt" ]]; then
-    echo -e "${RED}✗ Failed to load context index prompt template${NC}"
-    exit 1
-fi
-
 ralph_info "Generating context documentation index..."
-claude --dangerously-skip-permissions "$index_prompt" > "$CONTEXT_DIR/CLAUDE.md" 2>&1
+
+# For the index, we need to pass the context files as references
+claude --dangerously-skip-permissions \
+    "@$CONTEXT_DIR/ARCHITECTURE.md" \
+    "@$CONTEXT_DIR/BUSINESS_RULES.md" \
+    "@$CONTEXT_DIR/GENERAL.md" \
+    "@$RALPH_PROMPTS_DIR/context-index-prompt.md" > "$CONTEXT_DIR/CLAUDE.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/CLAUDE.md" ]] && [[ -s "$CONTEXT_DIR/CLAUDE.md" ]]; then
     echo -e "${GREEN}✓ CLAUDE.md created${NC}"
