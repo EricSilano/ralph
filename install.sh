@@ -74,6 +74,34 @@ logs/
 *~
 EOF
 
+# Add ralph/ to repository's .gitignore if not already present
+echo "Checking repository .gitignore..."
+REPO_ROOT="$(cd "$INSTALL_DIR/.." && pwd)"
+REPO_GITIGNORE="$REPO_ROOT/.gitignore"
+
+# Determine the relative path entry to add
+RALPH_BASENAME="$(basename "$INSTALL_DIR")"
+
+if [[ -f "$REPO_GITIGNORE" ]]; then
+    # Check if ralph/ is already in .gitignore (with or without trailing slash)
+    if grep -q "^${RALPH_BASENAME}/\?$" "$REPO_GITIGNORE" 2>/dev/null; then
+        echo "✓ $RALPH_BASENAME/ already in repository .gitignore"
+    else
+        echo "Adding $RALPH_BASENAME/ to repository .gitignore..."
+        echo "" >> "$REPO_GITIGNORE"
+        echo "# Ralph AI assistant directory" >> "$REPO_GITIGNORE"
+        echo "$RALPH_BASENAME/" >> "$REPO_GITIGNORE"
+        echo "✓ Added $RALPH_BASENAME/ to repository .gitignore"
+    fi
+else
+    echo "Creating repository .gitignore with $RALPH_BASENAME/..."
+    cat > "$REPO_GITIGNORE" <<EOF
+# Ralph AI assistant directory
+$RALPH_BASENAME/
+EOF
+    echo "✓ Created repository .gitignore with $RALPH_BASENAME/"
+fi
+
 echo ""
 echo "✓ Ralph installed successfully to: $INSTALL_DIR"
 echo ""
