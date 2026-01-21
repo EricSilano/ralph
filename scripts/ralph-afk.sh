@@ -113,14 +113,28 @@ for ((i=1; i<=$1; i++)); do
   echo "" >> "$AFK_LOG"
   echo "--- Iteration $i/$1 started at $(date) ---" >> "$AFK_LOG"
 
-  # Show the command being run
-  echo -e "${DIM}Running: claude --dangerously-skip-permissions @PRD @PROGRESS @AFK_PROMPT${NC}"
-  echo "Command: claude --dangerously-skip-permissions \"@$PRD_FILE\" \"@$PROGRESS_FILE\" \"@$AFK_PROMPT\"" >> "$AFK_LOG"
+  # Read file contents
+  prd_content=$(cat "$PRD_FILE")
+  progress_content=$(cat "$PROGRESS_FILE")
+  prompt_content=$(cat "$AFK_PROMPT")
 
-  # Call claude with prompt file - NO -p flag because we need Claude to execute tools
+  # Build the full prompt
+  full_prompt="$prd_content
+
+$progress_content
+
+$prompt_content"
+
+  # Show the command being run
+  echo -e "${DIM}Running: claude --dangerously-skip-permissions \"\$full_prompt\"${NC}"
+  echo "Command: claude --dangerously-skip-permissions \"\$full_prompt\"" >> "$AFK_LOG"
+  echo "Full prompt content:" >> "$AFK_LOG"
+  echo "$full_prompt" >> "$AFK_LOG"
+
+  # Call claude with combined prompt - pass as direct string like gen-prd.sh
   # Capture both stdout and stderr, and track exit code
   set +e
-  result=$(claude --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "@$AFK_PROMPT" 2>&1)
+  result=$(claude --dangerously-skip-permissions "$full_prompt" 2>&1)
   exit_code=$?
   set -e
 
