@@ -1,6 +1,28 @@
 #!/bin/bash
 set -e
 
+# Parse command line arguments
+SKIP_PRD=false
+for arg in "$@"; do
+    case $arg in
+        --skip-prd|-s)
+            SKIP_PRD=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: ralph-start.sh [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --skip-prd, -s    Skip PRD generation and use existing PRD.md"
+            echo "  --help, -h        Show this help message"
+            echo ""
+            exit 0
+            ;;
+        *)
+            ;;
+    esac
+done
+
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -34,12 +56,49 @@ echo -e "${CYAN}🧑‍💻 Ralph Wiggum - Interactive Setup${NC}"
 echo "==========================================="
 echo ""
 
+# Check if skipping PRD generation
+if [[ "$SKIP_PRD" == "true" ]]; then
+    if [[ ! -f "$PRD_FILE" ]]; then
+        echo -e "${YELLOW}⚠ Warning: --skip-prd flag set but no PRD file found at:${NC}"
+        echo "  $PRD_FILE"
+        echo ""
+        read -p "Continue without a PRD? [y/N]: " continue_without_prd
+        case $continue_without_prd in
+            [Yy]* )
+                echo "Continuing without PRD..."
+                # Create minimal PRD
+                echo "# PRD - No specific requirements provided" > "$PRD_FILE"
+                echo "" >> "$PRD_FILE"
+                echo "Started without PRD generation on $(date)" >> "$PRD_FILE"
+                ;;
+            * )
+                echo "Please create a PRD.md file in the ralph directory or run without --skip-prd flag."
+                exit 1
+                ;;
+        esac
+    else
+        echo -e "${GREEN}✓ Using existing PRD file:${NC}"
+        echo "  $PRD_FILE"
+        echo ""
+        echo -e "${CYAN}Current PRD:${NC}"
+        echo "==========================================="
+        cat "$PRD_FILE"
+        echo ""
+        echo "==========================================="
+        echo ""
+        read -p "Press Enter to continue with this PRD..."
+    fi
+fi
+
 # Step 1: Get brief description from user
+if [[ "$SKIP_PRD" != "true" ]]; then
 echo -e "${YELLOW}Step 1: What do you want to build?${NC}"
 echo ""
 echo "Choose input method:"
 echo "  [1] Type/paste directly (press Ctrl+D when done)"
 echo "  [2] Open in editor (\$EDITOR)"
+echo "  [3] Improve existing PRD"
+echo "  [4] Skip PRD generation (use existing PRD.md)"
 echo ""
 read -p "Your choice [1]: " input_choice
 input_choice=${input_choice:-1}
@@ -54,6 +113,99 @@ case $input_choice in
         description=$(cat "$TEMP_FILE")
         rm -f "$TEMP_FILE"
         ;;
+    3)
+        # Improve existing PRD
+        if [[ ! -f "$PRD_FILE" ]]; then
+            echo -e "${YELLOW}⚠ No existing PRD found at: $PRD_FILE${NC}"
+            echo ""
+            echo "Please run ralph-start.sh first to create an initial PRD."
+            exit 1
+        fi
+
+        echo ""
+        echo -e "${CYAN}📝 Current PRD:${NC}"
+        echo "==========================================="
+        cat "$PRD_FILE"
+        echo ""
+        echo "==========================================="
+        echo ""
+        echo -e "${YELLOW}What improvements or changes do you want to make?${NC}"
+        echo ""
+        echo "Choose input method:"
+        echo "  [1] Type/paste directly (press Ctrl+D when done)"
+        echo "  [2] Open in editor (\$EDITOR)"
+        echo ""
+        read -p "Your choice [1]: " improvement_choice
+        improvement_choice=${improvement_choice:-1}
+
+        improvements=""
+        case $improvement_choice in
+            2)
+                TEMP_FILE=$(mktemp)
+                ${EDITOR:-vim} "$TEMP_FILE"
+                improvements=$(cat "$TEMP_FILE")
+                rm -f "$TEMP_FILE"
+                ;;
+            *)
+                echo ""
+                echo "Enter your improvements (paste is OK, press Ctrl+D on new line when done):"
+                echo "---"
+                improvements=$(cat)
+                echo "---"
+                ;;
+        esac
+
+        if [[ -z "$improvements" ]]; then
+            echo "No improvements provided. Exiting."
+            exit 1
+        fi
+
+        # Read existing PRD content
+        existing_prd=$(cat "$PRD_FILE")
+
+        # Create description that includes both the existing PRD and requested improvements
+        description="EXISTING PRD:
+$existing_prd
+
+REQUESTED IMPROVEMENTS:
+$improvements"
+        ;;
+    4)
+        # Skip PRD generation and use existing
+        if [[ ! -f "$PRD_FILE" ]]; then
+            echo -e "${YELLOW}⚠ No existing PRD found at: $PRD_FILE${NC}"
+            echo ""
+            read -p "Continue without a PRD? [y/N]: " continue_without_prd
+            case $continue_without_prd in
+                [Yy]* )
+                    echo "Creating minimal PRD..."
+                    # Create minimal PRD
+                    echo "# PRD - No specific requirements provided" > "$PRD_FILE"
+                    echo "" >> "$PRD_FILE"
+                    echo "Started without PRD generation on $(date)" >> "$PRD_FILE"
+                    ;;
+                * )
+                    echo "Please create a PRD.md file in the ralph directory first."
+                    exit 1
+                    ;;
+            esac
+        fi
+
+        echo ""
+        echo -e "${GREEN}✓ Using existing PRD file:${NC}"
+        echo "  $PRD_FILE"
+        echo ""
+        echo -e "${CYAN}Current PRD:${NC}"
+        echo "==========================================="
+        cat "$PRD_FILE"
+        echo ""
+        echo "==========================================="
+        echo ""
+        read -p "Press Enter to continue with this PRD..."
+
+        # Set SKIP_PRD to skip the rest of PRD generation
+        SKIP_PRD=true
+        ;;
     *)
         # Direct input with Ctrl+D to finish
         echo ""
@@ -63,86 +215,89 @@ case $input_choice in
         echo "---"
         ;;
 esac
+fi  # End of Step 1 conditional
 
-if [[ -z "$description" ]]; then
+if [[ -z "$description" ]] && [[ "$SKIP_PRD" != "true" ]]; then
     echo "No description provided. Exiting."
     exit 1
 fi
 
-echo ""
-echo -e "${CYAN}📝 Your description:${NC}"
-echo "$description"
-echo ""
-
-# Step 2: AI improves the prompt into a full PRD
-echo -e "${YELLOW}Step 2: Generating detailed PRD...${NC}"
-echo ""
-
-# Load PRD generation prompt from template
-prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
-
-claude -p "$prd_prompt" > "$PRD_FILE"
-
-echo -e "${GREEN}✓ PRD generated!${NC}"
-echo ""
-
-# Step 3: Show PRD for validation
-echo -e "${YELLOW}Step 3: Review the generated PRD${NC}"
-echo "==========================================="
-cat "$PRD_FILE"
-echo ""
-echo "==========================================="
-echo ""
-
-# Step 4: Ask for validation
-while true; do
-    echo -e "${YELLOW}Options:${NC}"
-    echo "  [y] Approve and start Ralph"
-    echo "  [e] Edit PRD manually (opens in \$EDITOR)"
-    echo "  [r] Regenerate with more details"
-    echo "  [n] Cancel"
+if [[ "$SKIP_PRD" != "true" ]]; then
     echo ""
-    read -p "Your choice: " choice
+    echo -e "${CYAN}📝 Your description:${NC}"
+    echo "$description"
+    echo ""
 
-    case $choice in
-        [Yy]* )
-            echo ""
-            echo -e "${GREEN}✓ PRD approved!${NC}"
-            break
-            ;;
-        [Ee]* )
-            ${EDITOR:-vim} "$PRD_FILE"
-            echo ""
-            echo -e "${CYAN}Updated PRD:${NC}"
-            cat "$PRD_FILE"
-            echo ""
-            ;;
-        [Rr]* )
-            echo ""
-            echo "Add more details or clarifications (press Ctrl+D when done):"
-            echo "---"
-            extra=$(cat)
-            echo "---"
-            description+=$'\n'"Additional details: "$extra
-            echo -e "${YELLOW}Regenerating PRD...${NC}"
+    # Step 2: AI improves the prompt into a full PRD
+    echo -e "${YELLOW}Step 2: Generating detailed PRD...${NC}"
+    echo ""
 
-            # Load PRD generation prompt from template (reuse same template)
-            prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
+    # Load PRD generation prompt from template
+    prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
-            claude -p "$prd_prompt" > "$PRD_FILE"
-            echo ""
-            cat "$PRD_FILE"
-            echo ""
-            ;;
-        [Nn]* )
-            echo "Cancelled."
-            exit 0
-            ;;
-        * )
-            echo "Please answer y, e, r, or n."
-            ;;
-    esac
-done
+    claude -p "$prd_prompt" > "$PRD_FILE"
+
+    echo -e "${GREEN}✓ PRD generated!${NC}"
+    echo ""
+
+    # Step 3: Show PRD for validation
+    echo -e "${YELLOW}Step 3: Review the generated PRD${NC}"
+    echo "==========================================="
+    cat "$PRD_FILE"
+    echo ""
+    echo "==========================================="
+    echo ""
+
+    # Step 4: Ask for validation
+    while true; do
+        echo -e "${YELLOW}Options:${NC}"
+        echo "  [y] Approve and start Ralph"
+        echo "  [e] Edit PRD manually (opens in \$EDITOR)"
+        echo "  [r] Regenerate with more details"
+        echo "  [n] Cancel"
+        echo ""
+        read -p "Your choice: " choice
+
+        case $choice in
+            [Yy]* )
+                echo ""
+                echo -e "${GREEN}✓ PRD approved!${NC}"
+                break
+                ;;
+            [Ee]* )
+                ${EDITOR:-vim} "$PRD_FILE"
+                echo ""
+                echo -e "${CYAN}Updated PRD:${NC}"
+                cat "$PRD_FILE"
+                echo ""
+                ;;
+            [Rr]* )
+                echo ""
+                echo "Add more details or clarifications (press Ctrl+D when done):"
+                echo "---"
+                extra=$(cat)
+                echo "---"
+                description+=$'\n'"Additional details: "$extra
+                echo -e "${YELLOW}Regenerating PRD...${NC}"
+
+                # Load PRD generation prompt from template (reuse same template)
+                prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
+
+                claude -p "$prd_prompt" > "$PRD_FILE"
+                echo ""
+                cat "$PRD_FILE"
+                echo ""
+                ;;
+            [Nn]* )
+                echo "Cancelled."
+                exit 0
+                ;;
+            * )
+                echo "Please answer y, e, r, or n."
+                ;;
+        esac
+    done
+fi  # End of PRD generation conditional
 
 # Initialize progress file
 echo "# Progress Log" > "$PROGRESS_FILE"
