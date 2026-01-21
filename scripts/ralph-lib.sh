@@ -110,11 +110,19 @@ ralph_log() {
     local color
     color=$(_ralph_get_color "$level")
 
-    # Format: [TIMESTAMP] [LEVEL] message
+    # Output to console (stderr)
     printf "%b[%s]%b %b[%-5s]%b %s\n" \
         "$COLOR_DIM" "$timestamp" "$COLOR_RESET" \
         "$color" "$level" "$COLOR_RESET" \
         "$message" >&2
+
+    # Also write to daily log file
+    ralph_log_daily "$level" "$message"
+
+    # If error level, also write to error log
+    if [[ "$level" == "ERROR" ]]; then
+        ralph_log_error_file "$message"
+    fi
 }
 
 # Convenience logging functions
@@ -1505,6 +1513,19 @@ export -f ralph_needs_summarization
 RALPH_FULL_OUTPUT_LOG="${RALPH_FULL_OUTPUT_LOG:-${RALPH_LOG_DIR}/ralph-full-output.log}"
 RALPH_FILTER_OUTPUT="${RALPH_FILTER_OUTPUT:-true}"
 
+# Verbosity configuration (0=silent, 1=filtered, 2=full)
+# Backward compatibility: Honor RALPH_FILTER_OUTPUT if set
+if [[ -n "${RALPH_FILTER_OUTPUT}" ]]; then
+    if [[ "${RALPH_FILTER_OUTPUT}" == "true" ]]; then
+        RALPH_VERBOSE="${RALPH_VERBOSE:-1}"
+    else
+        RALPH_VERBOSE="${RALPH_VERBOSE:-2}"
+    fi
+fi
+# Default to full verbose output (per user preference)
+RALPH_VERBOSE="${RALPH_VERBOSE:-2}"
+export RALPH_VERBOSE
+
 # Get the path to the full output log file
 # Usage: logfile=$(ralph_get_full_output_log_path)
 ralph_get_full_output_log_path() {
@@ -1685,6 +1706,133 @@ export -f ralph_log_full_output
 export -f ralph_extract_output_summary
 export -f ralph_filter_output
 export -f ralph_get_output_stats
+
+# ==============================================================================
+# Claude CLI Wrapper Functions
+# ==============================================================================
+
+# Unified wrapper for Claude CLI invocations
+# Handles output streaming, logging, and verbosity control
+# Usage: ralph_claude [options] <claude-args>
+# Usage: output=$(ralph_claude --capture [options] <claude-args>)
+#
+# Wrapper Options:
+#   --capture           Return output as string (for variable capture)
+#   --label "name"      Label for logs (default: "claude")
+#
+# Verbosity Levels (RALPH_VERBOSE):
+#   0 = Silent (only errors)
+#   1 = Filtered (summaries)
+#   2 = Full (default, all output in real-time)
+ralph_claude() {
+    local capture_mode=false
+    local label="claude"
+    local claude_args=()
+
+    # Parse wrapper-specific options
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --capture)
+                capture_mode=true
+                shift
+                ;;
+            --label)
+                label="$2"
+                shift 2
+                ;;
+            *)
+                # All other arguments pass through to claude
+                claude_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Determine verbosity level (default to 2 = full output)
+    local verbose="${RALPH_VERBOSE:-2}"
+
+    # Create session ID for logging
+    local session_id="${label}_$(date +%s)"
+    local log_file
+    log_file=$(ralph_get_full_output_log_path)
+
+    # Build the command with proper escaping
+    local cmd="claude"
+    for arg in "${claude_args[@]}"; do
+        cmd="$cmd $(printf '%q' "$arg")"
+    done
+
+    if [[ "$capture_mode" == "true" ]]; then
+        # Capture mode: collect output for return value
+        local output
+        if [[ "$verbose" -ge 2 ]]; then
+            # Verbose: show AND capture using process substitution
+            output=$(eval "$cmd" 2>&1 | tee >(cat >&2))
+        else
+            # Not verbose: silent capture
+            output=$(eval "$cmd" 2>&1)
+        fi
+
+        # Always log to file regardless of verbosity
+        ralph_log_full_output "$session_id" 0 "$output"
+
+        # Return the output
+        echo "$output"
+    else
+        # Direct streaming mode: output goes to console based on verbosity
+        if [[ "$verbose" -ge 2 ]]; then
+            # Full verbose: show everything in real-time
+            eval "$cmd" 2>&1 | tee -a "$log_file"
+        elif [[ "$verbose" -eq 1 ]]; then
+            # Filtered: collect, show summary, log full
+            local output
+            output=$(eval "$cmd" 2>&1)
+            ralph_log_full_output "$session_id" 0 "$output"
+
+            # Show filtered summary
+            ralph_extract_output_summary "$output"
+        else
+            # Silent: only log to file
+            eval "$cmd" >> "$log_file" 2>&1
+        fi
+    fi
+}
+
+# Parse verbosity flags from command line arguments
+# Sets RALPH_VERBOSE environment variable based on flags
+# Returns remaining non-flag arguments
+# Usage: remaining_args=$(ralph_parse_verbose_flags "$@")
+ralph_parse_verbose_flags() {
+    local remaining_args=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -v|--verbose)
+                export RALPH_VERBOSE=2
+                shift
+                ;;
+            -q|--quiet)
+                export RALPH_VERBOSE=1
+                shift
+                ;;
+            -qq|--very-quiet|--silent)
+                export RALPH_VERBOSE=0
+                shift
+                ;;
+            *)
+                remaining_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Return remaining args
+    echo "${remaining_args[@]}"
+}
+
+# Export Claude wrapper functions
+export -f ralph_claude
+export -f ralph_parse_verbose_flags
 
 # ==============================================================================
 # Template Loading Functions (for Prompts)

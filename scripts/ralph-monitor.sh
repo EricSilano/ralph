@@ -2,6 +2,23 @@
 # ralph-monitor.sh - Continuous oversight loop that reviews progress every 10 minutes
 set -e
 
+# Parse command line arguments for verbosity
+for arg in "$@"; do
+    case $arg in
+        -v|--verbose)
+            export RALPH_VERBOSE=2
+            ;;
+        -q|--quiet)
+            export RALPH_VERBOSE=1
+            ;;
+        -qq|--silent|--very-quiet)
+            export RALPH_VERBOSE=0
+            ;;
+        *)
+            ;;
+    esac
+done
+
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -221,9 +238,11 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
                     "PRD_ADJUSTMENTS=$prd_adjustments")
 
                 # Let Claude update the PRD with context
-                claude --dangerously-skip-permissions "@$PRD_FILE @$PROGRESS_FILE
-
-$prd_update_prompt" >/dev/null 2>&1 || ralph_error "Failed to update PRD"
+                ralph_info "Updating PRD based on oversight review..."
+                ralph_claude --label "prd-update" \
+                    --dangerously-skip-permissions \
+                    "@$PRD_FILE" "@$PROGRESS_FILE" \
+                    "$prd_update_prompt" || ralph_error "Failed to update PRD"
 
                 echo -e "${GREEN}  ✓ PRD updated${NC}" | tee -a "$MONITOR_LOG"
                 ralph_info "PRD updated based on oversight review"

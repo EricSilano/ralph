@@ -8,9 +8,21 @@ for arg in "$@"; do
             echo "Usage: ralph-start.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --help, -h        Show this help message"
+            echo "  -v, --verbose     Show full Claude output (default)"
+            echo "  -q, --quiet       Show filtered summaries only"
+            echo "  -qq, --silent     Silent mode, only errors"
+            echo "  -h, --help        Show this help message"
             echo ""
             exit 0
+            ;;
+        -v|--verbose)
+            export RALPH_VERBOSE=2
+            ;;
+        -q|--quiet)
+            export RALPH_VERBOSE=1
+            ;;
+        -qq|--silent|--very-quiet)
+            export RALPH_VERBOSE=0
             ;;
         *)
             ;;
@@ -249,7 +261,8 @@ if [[ "$SKIP_PRD" != "true" ]]; then
     # Load PRD generation prompt from template
     prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
-    claude -p "$prd_prompt" > "$PRD_FILE"
+    ralph_info "Generating PRD from your description..."
+    ralph_claude --capture -p "$prd_prompt" > "$PRD_FILE"
 
     echo -e "${GREEN}✓ PRD generated!${NC}"
     echo ""
@@ -297,7 +310,8 @@ if [[ "$SKIP_PRD" != "true" ]]; then
                 # Load PRD generation prompt from template (reuse same template)
                 prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
-                claude -p "$prd_prompt" > "$PRD_FILE"
+                ralph_info "Regenerating PRD with additional details..."
+                ralph_claude --capture -p "$prd_prompt" > "$PRD_FILE"
                 echo ""
                 cat "$PRD_FILE"
                 echo ""
