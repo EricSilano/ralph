@@ -60,7 +60,7 @@ for ((iteration=1; iteration<=MAX_ITERATIONS; iteration++)); do
     done
 
     # Run code review and capture output
-    review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+    review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
 
 You are an expert code reviewer. Review these files for:
 
@@ -110,11 +110,13 @@ Format your response as:
     # Step 2: Fix the issues
     echo -e "${CYAN}Step 2: Fixing issues automatically...${NC}"
 
-    fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+    fix_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 You are an expert software engineer. A code review was performed and issues were found.
 
 Review the code review results in $REVIEW_LOG and fix ALL issues found.
+
+IMPORTANT: Do NOT modify the PRD.md file. The PRD is the source of truth and should not be changed.
 
 For each issue:
 1. Read the affected file

@@ -17,6 +17,8 @@ You are an expert software engineer.
 A code review found issues in the implementation.
 Review the findings in {{REVIEW_LOG}} and fix ALL issues.
 
+**IMPORTANT: Do NOT modify the PRD.md file. The PRD is the source of truth and should not be changed.**
+
 Priority:
 1. Fix CRITICAL issues first
 2. Fix HIGH severity issues

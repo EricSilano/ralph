@@ -543,7 +543,7 @@ else
         fi
 
         echo "Running Claude code review..."
-        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+        review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
 
 $review_prompt" 2>&1)
 
@@ -595,7 +595,7 @@ $review_prompt" 2>&1)
         fi
 
         echo "Running Claude auto-fix..."
-        fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        fix_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 $fix_prompt" 2>&1)
 

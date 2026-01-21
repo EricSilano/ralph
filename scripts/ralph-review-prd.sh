@@ -51,7 +51,7 @@ for file in $source_files; do
 done
 
 # Run comprehensive review
-review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
 
 You are a senior software architect and code reviewer.
 
@@ -111,12 +111,14 @@ case "$choice" in
         echo ""
         echo -e "${CYAN}Fixing issues automatically...${NC}"
 
-        claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 You are an expert software engineer.
 
 A comprehensive code review found issues in the implementation.
 Review the findings in $REVIEW_LOG and fix ALL issues.
+
+IMPORTANT: Do NOT modify the PRD.md file. The PRD is the source of truth and should not be changed.
 
 Priority:
 1. Fix CRITICAL issues first
