@@ -122,13 +122,13 @@ trap cleanup SIGTERM SIGINT EXIT
 PROJECT_NAME="${RALPH_PROJECT_NAME:-$(basename "$PROJECT_ROOT")}"
 
 ralph_info "🔍 Ralph Monitor started (PID: $$) - Project: $PROJECT_NAME"
-ralph_info "Waiting 10 minutes before first check to let Ralph make initial progress..."
+ralph_info "Waiting 15 minutes before first check to let Ralph make initial progress..."
 echo ""
 
-# Wait 10 minutes before first check
-sleep 600
+# Wait 15 minutes before first check
+sleep 900
 
-ralph_info "Starting monitoring checks every 10 minutes for code quality and PRD alignment"
+ralph_info "Starting monitoring checks every 15 minutes for code quality and PRD alignment"
 echo ""
 
 iteration=0
@@ -233,7 +233,7 @@ $prd_update_prompt" >/dev/null 2>&1 || ralph_error "Failed to update PRD"
 
     echo "" | tee -a "$MONITOR_LOG"
 
-    # Sleep for 10 minutes (600 seconds)
-    ralph_info "Monitor iteration $iteration complete. Sleeping for 10 minutes..."
-    sleep 600
+    # Sleep for 15 minutes (900 seconds)
+    ralph_info "Monitor iteration $iteration complete. Sleeping for 15 minutes..."
+    sleep 900
 done
