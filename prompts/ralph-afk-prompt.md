@@ -23,4 +23,4 @@ This template is used by `ralph-afk.sh` to autonomously work through multiple ta
 
 ONLY WORK ON A SINGLE TASK.
 
-If the PRD is complete, output <promise>COMPLETE</promise>.
+If the PRD is 100% complete (all tasks where completed and success criteria was meet), output <promise>COMPLETE</promise>.
