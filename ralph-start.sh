@@ -2,18 +2,12 @@
 set -e
 
 # Parse command line arguments
-SKIP_PRD=false
 for arg in "$@"; do
     case $arg in
-        --skip-prd|-s)
-            SKIP_PRD=true
-            shift
-            ;;
         --help|-h)
             echo "Usage: ralph-start.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --skip-prd, -s    Skip PRD generation and use existing PRD.md"
             echo "  --help, -h        Show this help message"
             echo ""
             exit 0
