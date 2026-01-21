@@ -282,13 +282,21 @@ case $mode in
     2 )
         read -p "How many iterations? " iterations
         echo ""
-        echo -e "${CYAN}🚀 Starting Ralph (AFK mode, $iterations iterations)...${NC}"
-        echo -e "${CYAN}🔍 Opening oversight monitor in new terminal window...${NC}"
+        read -p "Open oversight monitor in new terminal? [Y/n]: " open_monitor
+        open_monitor=${open_monitor:-Y}
         echo ""
 
-        # Start monitor in a new terminal window
-        # Detect platform and open accordingly
-        if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo -e "${CYAN}🚀 Starting Ralph (AFK mode, $iterations iterations)...${NC}"
+
+        MONITOR_STARTED=false
+
+        if [[ "$open_monitor" =~ ^[Yy]$ ]]; then
+            echo -e "${CYAN}🔍 Opening oversight monitor in new terminal window...${NC}"
+            echo ""
+
+            # Start monitor in a new terminal window
+            # Detect platform and open accordingly
+            if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS - use osascript to open new Terminal window
             echo "Opening new macOS Terminal window for monitor..."
 
@@ -319,26 +327,35 @@ EOF
             echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
             echo ""
             read -p "Press Enter when you see the monitor window..."
+            MONITOR_STARTED=true
         elif command -v gnome-terminal &> /dev/null; then
             # Linux with gnome-terminal
             gnome-terminal -- bash -c "cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'; exec bash"
             echo "✓ Monitor terminal opened"
+            MONITOR_STARTED=true
         elif command -v xterm &> /dev/null; then
             # Fallback to xterm
             xterm -e "cd '$PROJECT_ROOT' && '$SCRIPT_DIR/scripts/ralph-monitor.sh'" &
             echo "✓ Monitor terminal opened"
+            MONITOR_STARTED=true
         else
             # Fallback: run in background of current terminal
             echo -e "${YELLOW}⚠ Could not detect terminal emulator. Running monitor in background.${NC}"
             "$SCRIPT_DIR/scripts/ralph-monitor.sh" &
             MONITOR_PID=$!
             echo "Monitor started in background (PID: $MONITOR_PID)"
+            MONITOR_STARTED=true
         fi
 
-        echo ""
-        echo -e "${GREEN}You can now see Ralph's progress in this terminal${NC}"
-        echo -e "${GREEN}and oversight monitoring in the other terminal.${NC}"
-        echo ""
+            echo ""
+            if [[ "$MONITOR_STARTED" == "true" ]]; then
+                echo -e "${GREEN}You can now see Ralph's progress in this terminal${NC}"
+                echo -e "${GREEN}and oversight monitoring in the other terminal.${NC}"
+            else
+                echo -e "${GREEN}You can now see Ralph's progress in this terminal.${NC}"
+            fi
+            echo ""
+        fi
 
         # Run ralph-afk (this blocks until completion)
         "$SCRIPT_DIR/scripts/ralph-afk.sh" "$iterations"
@@ -348,23 +365,25 @@ EOF
         echo -e "${YELLOW}Ralph AFK completed!${NC}"
         echo ""
 
-        # Kill monitor gracefully
-        if [[ -f "$PROJECT_ROOT/.ralph-monitor.pid" ]]; then
-            MONITOR_PID=$(cat "$PROJECT_ROOT/.ralph-monitor.pid")
-            if kill -0 "$MONITOR_PID" 2>/dev/null; then
-                echo "Stopping oversight monitor..."
-                kill -TERM "$MONITOR_PID" 2>/dev/null || true
-                sleep 2
-                # Force kill if still running
+        # Kill monitor gracefully (only if it was started)
+        if [[ "$MONITOR_STARTED" == "true" ]]; then
+            if [[ -f "$PROJECT_ROOT/.ralph-monitor.pid" ]]; then
+                MONITOR_PID=$(cat "$PROJECT_ROOT/.ralph-monitor.pid")
                 if kill -0 "$MONITOR_PID" 2>/dev/null; then
-                    kill -9 "$MONITOR_PID" 2>/dev/null || true
+                    echo "Stopping oversight monitor..."
+                    kill -TERM "$MONITOR_PID" 2>/dev/null || true
+                    sleep 2
+                    # Force kill if still running
+                    if kill -0 "$MONITOR_PID" 2>/dev/null; then
+                        kill -9 "$MONITOR_PID" 2>/dev/null || true
+                    fi
+                    echo -e "${GREEN}✓ Monitor stopped${NC}"
+                else
+                    echo -e "${YELLOW}Monitor already stopped${NC}"
                 fi
-                echo -e "${GREEN}✓ Monitor stopped${NC}"
             else
-                echo -e "${YELLOW}Monitor already stopped${NC}"
+                echo -e "${YELLOW}Monitor PID file not found (monitor may have already stopped)${NC}"
             fi
-        else
-            echo -e "${YELLOW}Monitor PID file not found (monitor may have already stopped)${NC}"
         fi
         ;;
     * )
