@@ -74,7 +74,7 @@ logs/
 *~
 EOF
 
-# Add ralph/ to repository's .gitignore if not already present
+# Add ralph/ and context/ to repository's .gitignore if not already present
 echo "Checking repository .gitignore..."
 REPO_ROOT="$(cd "$INSTALL_DIR/.." && pwd)"
 REPO_GITIGNORE="$REPO_ROOT/.gitignore"
@@ -93,13 +93,27 @@ if [[ -f "$REPO_GITIGNORE" ]]; then
         echo "$RALPH_BASENAME/" >> "$REPO_GITIGNORE"
         echo "✓ Added $RALPH_BASENAME/ to repository .gitignore"
     fi
+
+    # Check if context/ is already in .gitignore
+    if grep -q "^context/\?$" "$REPO_GITIGNORE" 2>/dev/null; then
+        echo "✓ context/ already in repository .gitignore"
+    else
+        echo "Adding context/ to repository .gitignore..."
+        echo "" >> "$REPO_GITIGNORE"
+        echo "# Generated context documentation (regenerate with ralph-prestart)" >> "$REPO_GITIGNORE"
+        echo "context/" >> "$REPO_GITIGNORE"
+        echo "✓ Added context/ to repository .gitignore"
+    fi
 else
-    echo "Creating repository .gitignore with $RALPH_BASENAME/..."
+    echo "Creating repository .gitignore with $RALPH_BASENAME/ and context/..."
     cat > "$REPO_GITIGNORE" <<EOF
 # Ralph AI assistant directory
 $RALPH_BASENAME/
+
+# Generated context documentation (regenerate with ralph-prestart)
+context/
 EOF
-    echo "✓ Created repository .gitignore with $RALPH_BASENAME/"
+    echo "✓ Created repository .gitignore with $RALPH_BASENAME/ and context/"
 fi
 
 echo ""
@@ -110,6 +124,7 @@ echo "  ✓ ralph-start.sh       - Interactive setup & full workflow"
 echo "  ✓ setup.sh             - System setup (adds to PATH)"
 echo ""
 echo "📂 Scripts Directory (scripts/):"
+echo "  ✓ ralph-prestart.sh    - Generate context documentation"
 echo "  ✓ ralph-once.sh        - Run single task"
 echo "  ✓ ralph-afk.sh         - Run multiple iterations"
 echo "  ✓ ralph-monitor.sh     - Oversight monitoring"
@@ -139,6 +154,7 @@ echo "  # Or from inside ralph directory:"
 echo "  cd $INSTALL_DIR && ./ralph-start.sh"
 echo ""
 echo "📚 Usage Examples (from project root):"
+echo "  ./$INSTALL_DIR/scripts/ralph-prestart.sh             # Generate context documentation"
 echo "  ./$INSTALL_DIR/ralph-start.sh                        # Full interactive workflow"
 echo "  ./$INSTALL_DIR/scripts/ralph-once.sh                 # Single task execution"
 echo "  ./$INSTALL_DIR/scripts/ralph-afk.sh 10               # Run 10 iterations"

@@ -14,6 +14,8 @@ This template is used by `ralph-monitor.sh` to update the PRD based on oversight
 
 You are updating the PRD based on oversight review findings.
 
+**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and established patterns. Use this context to ensure PRD updates align with existing conventions.**
+
 **Oversight Review Findings**:
 {{PRD_ADJUSTMENTS}}
 

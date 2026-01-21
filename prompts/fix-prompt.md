@@ -12,6 +12,8 @@ This template is used by `ralph-start.sh` (Step 6) to automatically fix issues f
 
 You are an expert software engineer.
 
+**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and established patterns. Use this context to ensure your fixes align with existing conventions.**
+
 A code review found issues in the implementation.
 Review the findings in {{REVIEW_LOG}} and fix ALL issues.
 

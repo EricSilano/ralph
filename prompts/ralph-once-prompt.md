@@ -11,6 +11,8 @@ This template is used by `ralph-once.sh` to execute a single task from the PRD (
 
 ## Prompt
 
+**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and established patterns.**
+
 1. Read the PRD and progress file.
 2. Find the next incomplete task and implement it.
 3. Update progress.txt with what you did.

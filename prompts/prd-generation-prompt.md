@@ -12,6 +12,8 @@ This template is used by `ralph-start.sh` to generate the initial Product Requir
 
 You are a technical product manager. Based on this brief description, create a detailed PRD (Product Requirements Document) in Markdown format.
 
+**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and general context. This will help you create a PRD that aligns with existing patterns and conventions.**
+
 USER DESCRIPTION:
 {{USER_DESCRIPTION}}
 

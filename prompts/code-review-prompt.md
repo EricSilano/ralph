@@ -13,6 +13,8 @@ This template is used by `ralph-start.sh` (Step 6) to perform comprehensive code
 
 You are an expert code reviewer and software architect.
 
+**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and established patterns. Use this context to ensure the implementation aligns with existing conventions.**
+
 Review the implementation against the PRD requirements and code quality standards:
 
 1. **PRD Completeness**: Are all required tasks implemented?

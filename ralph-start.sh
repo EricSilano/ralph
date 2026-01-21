@@ -50,6 +50,61 @@ echo -e "${CYAN}🧑‍💻 Ralph Wiggum - Interactive Setup${NC}"
 echo "==========================================="
 echo ""
 
+# Check for context files
+CONTEXT_DIR="$PROJECT_ROOT/context"
+CONTEXT_FILES_EXIST=false
+
+if [[ -f "$CONTEXT_DIR/CLAUDE.md" ]] && [[ -f "$CONTEXT_DIR/ARCHITECTURE.md" ]] && \
+   [[ -f "$CONTEXT_DIR/BUSINESS_RULES.md" ]] && [[ -f "$CONTEXT_DIR/GENERAL.md" ]]; then
+    CONTEXT_FILES_EXIST=true
+fi
+
+if [[ "$CONTEXT_FILES_EXIST" == "false" ]]; then
+    echo -e "${YELLOW}📖 Context Documentation${NC}"
+    echo ""
+    echo "No context documentation found in $CONTEXT_DIR"
+    echo ""
+    echo "Context files help Ralph understand your codebase better by providing:"
+    echo "  • Architecture overview and system structure"
+    echo "  • Business rules and domain logic"
+    echo "  • General project information and setup"
+    echo ""
+    echo "Would you like to generate context documentation now?"
+    echo "  [y] Yes, generate context files (recommended, takes a few minutes)"
+    echo "  [n] No, skip for now"
+    echo ""
+    read -p "Your choice [y]: " generate_context
+    generate_context=${generate_context:-y}
+
+    case $generate_context in
+        [Yy]* )
+            echo ""
+            echo -e "${CYAN}Generating context documentation...${NC}"
+            echo ""
+            if [[ -x "$SCRIPT_DIR/scripts/ralph-prestart.sh" ]]; then
+                "$SCRIPT_DIR/scripts/ralph-prestart.sh"
+                echo ""
+                echo -e "${GREEN}✓ Context files generated successfully!${NC}"
+                echo ""
+            else
+                echo -e "${YELLOW}⚠ Warning: scripts/ralph-prestart.sh not found or not executable${NC}"
+                echo "Continuing without context files..."
+                echo ""
+            fi
+            ;;
+        * )
+            echo ""
+            echo "Skipping context generation. You can generate it later by running:"
+            echo "  $SCRIPT_DIR/scripts/ralph-prestart.sh"
+            echo ""
+            ;;
+    esac
+else
+    echo -e "${GREEN}✓ Context documentation found${NC}"
+    echo "  Location: $CONTEXT_DIR"
+    echo ""
+fi
+
 # Step 1: Get brief description from user
 echo -e "${YELLOW}Step 1: What do you want to build?${NC}"
 echo ""
