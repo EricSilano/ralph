@@ -262,7 +262,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
     prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
     ralph_info "Generating PRD from your description..."
-    ralph_claude --capture "$prd_prompt" > "$PRD_FILE"
+    claude --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
 
     echo -e "${GREEN}✓ PRD generated!${NC}"
     echo ""
@@ -311,7 +311,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
                 prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
                 ralph_info "Regenerating PRD with additional details..."
-                ralph_claude --capture "$prd_prompt" > "$PRD_FILE"
+                claude --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
                 echo ""
                 cat "$PRD_FILE"
                 echo ""

@@ -57,9 +57,7 @@ if [[ -z "$arch_prompt" ]]; then
 fi
 
 ralph_info "Analyzing codebase architecture (this may take a minute)..."
-ralph_claude --capture --label "architecture" \
-    --dangerously-skip-permissions \
-    "$arch_prompt" > "$CONTEXT_DIR/ARCHITECTURE.md"
+claude --dangerously-skip-permissions "$arch_prompt" > "$CONTEXT_DIR/ARCHITECTURE.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/ARCHITECTURE.md" ]] && [[ -s "$CONTEXT_DIR/ARCHITECTURE.md" ]]; then
     echo -e "${GREEN}✓ ARCHITECTURE.md created${NC}"
@@ -83,9 +81,7 @@ if [[ -z "$business_prompt" ]]; then
 fi
 
 ralph_info "Extracting business rules and domain logic..."
-ralph_claude --capture --label "business-rules" \
-    --dangerously-skip-permissions \
-    "$business_prompt" > "$CONTEXT_DIR/BUSINESS_RULES.md"
+claude --dangerously-skip-permissions "$business_prompt" > "$CONTEXT_DIR/BUSINESS_RULES.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/BUSINESS_RULES.md" ]] && [[ -s "$CONTEXT_DIR/BUSINESS_RULES.md" ]]; then
     echo -e "${GREEN}✓ BUSINESS_RULES.md created${NC}"
@@ -109,9 +105,7 @@ if [[ -z "$general_prompt" ]]; then
 fi
 
 ralph_info "Creating general project context documentation..."
-ralph_claude --capture --label "general-context" \
-    --dangerously-skip-permissions \
-    "$general_prompt" > "$CONTEXT_DIR/GENERAL.md"
+claude --dangerously-skip-permissions "$general_prompt" > "$CONTEXT_DIR/GENERAL.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/GENERAL.md" ]] && [[ -s "$CONTEXT_DIR/GENERAL.md" ]]; then
     echo -e "${GREEN}✓ GENERAL.md created${NC}"
@@ -146,9 +140,7 @@ if [[ -z "$index_prompt" ]]; then
 fi
 
 ralph_info "Generating context documentation index..."
-ralph_claude --capture --label "context-index" \
-    --dangerously-skip-permissions \
-    "$index_prompt" > "$CONTEXT_DIR/CLAUDE.md"
+claude --dangerously-skip-permissions "$index_prompt" > "$CONTEXT_DIR/CLAUDE.md" 2>&1
 
 if [[ -f "$CONTEXT_DIR/CLAUDE.md" ]] && [[ -s "$CONTEXT_DIR/CLAUDE.md" ]]; then
     echo -e "${GREEN}✓ CLAUDE.md created${NC}"

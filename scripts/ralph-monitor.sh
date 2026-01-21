@@ -239,10 +239,7 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
 
                 # Let Claude update the PRD with context
                 ralph_info "Updating PRD based on oversight review..."
-                ralph_claude --label "prd-update" \
-                    --dangerously-skip-permissions \
-                    "@$PRD_FILE" "@$PROGRESS_FILE" \
-                    "$prd_update_prompt" || ralph_error "Failed to update PRD"
+                claude --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
 
                 echo -e "${GREEN}  ✓ PRD updated${NC}" | tee -a "$MONITOR_LOG"
                 ralph_info "PRD updated based on oversight review"

@@ -34,10 +34,8 @@ afk_prompt=$(ralph_load_template "ralph-afk-prompt.md" "PRD_FILE=$PRD_FILE" "PRO
 for ((i=1; i<=$1; i++)); do
   ralph_info "Starting iteration $i/$1..."
 
-  # Use ralph_claude with --capture to enable real-time streaming while still capturing output
-  result=$(ralph_claude --capture \
-    --dangerously-skip-permissions \
-    -p "@$PRD_FILE" "@$PROGRESS_FILE" "$afk_prompt")
+  # Call claude directly with file references and prompt
+  result=$(claude --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$afk_prompt" 2>&1)
 
   # Check for completion marker
   if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
