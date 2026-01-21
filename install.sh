@@ -4,6 +4,15 @@ set -e
 RALPH_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_DIR="${1:-./ralph}"
 
+# Pull latest changes from Ralph repository
+echo "🔄 Updating Ralph from git..."
+if git -C "$RALPH_DIR" pull --quiet; then
+    echo "✓ Ralph updated to latest version"
+else
+    echo "⚠️  Could not update Ralph (offline or not a git repo)"
+fi
+echo ""
+
 echo "📦 Installing Ralph to $INSTALL_DIR..."
 echo ""
 
