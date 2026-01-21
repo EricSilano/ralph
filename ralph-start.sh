@@ -64,25 +64,32 @@ echo ""
 
 # Check for context files
 CONTEXT_DIR="$PROJECT_ROOT/context"
-CONTEXT_FILES_EXIST=false
+MISSING_FILES=()
 
-if [[ -f "$CONTEXT_DIR/CLAUDE.md" ]] && [[ -f "$CONTEXT_DIR/ARCHITECTURE.md" ]] && \
-   [[ -f "$CONTEXT_DIR/BUSINESS_RULES.md" ]] && [[ -f "$CONTEXT_DIR/GENERAL.md" ]]; then
-    CONTEXT_FILES_EXIST=true
-fi
+[[ ! -f "$CONTEXT_DIR/ARCHITECTURE.md" ]] && MISSING_FILES+=("ARCHITECTURE.md")
+[[ ! -f "$CONTEXT_DIR/BUSINESS_RULES.md" ]] && MISSING_FILES+=("BUSINESS_RULES.md")
+[[ ! -f "$CONTEXT_DIR/GENERAL.md" ]] && MISSING_FILES+=("GENERAL.md")
+[[ ! -f "$CONTEXT_DIR/CLAUDE.md" ]] && MISSING_FILES+=("CLAUDE.md")
 
-if [[ "$CONTEXT_FILES_EXIST" == "false" ]]; then
+if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
     echo -e "${YELLOW}📖 Context Documentation${NC}"
     echo ""
-    echo "No context documentation found in $CONTEXT_DIR"
+    if [[ ${#MISSING_FILES[@]} -eq 4 ]]; then
+        echo "No context documentation found in $CONTEXT_DIR"
+    else
+        echo "Some context files are missing in $CONTEXT_DIR:"
+        for file in "${MISSING_FILES[@]}"; do
+            echo "  • $file"
+        done
+    fi
     echo ""
     echo "Context files help Ralph understand your codebase better by providing:"
     echo "  • Architecture overview and system structure"
     echo "  • Business rules and domain logic"
     echo "  • General project information and setup"
     echo ""
-    echo "Would you like to generate context documentation now?"
-    echo "  [y] Yes, generate context files (recommended, takes a few minutes)"
+    echo "Would you like to generate the missing context files now?"
+    echo "  [y] Yes, generate context files (recommended)"
     echo "  [n] No, skip for now"
     echo ""
     read -p "Your choice [y]: " generate_context
@@ -112,7 +119,7 @@ if [[ "$CONTEXT_FILES_EXIST" == "false" ]]; then
             ;;
     esac
 else
-    echo -e "${GREEN}✓ Context documentation found${NC}"
+    echo -e "${GREEN}✓ All context documentation files found${NC}"
     echo "  Location: $CONTEXT_DIR"
     echo ""
 fi
