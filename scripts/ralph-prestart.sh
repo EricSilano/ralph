@@ -69,7 +69,7 @@ index_prompt=$(ralph_load_template "context-index-prompt.md")
 
 # Generate CLAUDE.md index file
 ralph_info "Generating context/CLAUDE.md index..."
-echo "2" | claude --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt"
+claude -p --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt" > /dev/null 2>&1
 
 if [[ -f "$INDEX_FILE" ]]; then
     ralph_info "Context documentation complete!"
