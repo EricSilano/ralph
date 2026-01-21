@@ -3,18 +3,19 @@ set -e
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RALPH_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$RALPH_ROOT/.." && pwd)"
 
 # Work in project root
 cd "$PROJECT_ROOT"
 
 # Set up logging environment
-export RALPH_LOG_DIR="$SCRIPT_DIR/logs"
-export RALPH_PROMPTS_DIR="$SCRIPT_DIR/prompts"
+export RALPH_LOG_DIR="$RALPH_ROOT/logs"
+export RALPH_PROMPTS_DIR="$RALPH_ROOT/prompts"
 
 # Source ralph library for template loading
-if [[ -f "$SCRIPT_DIR/scripts/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/scripts/ralph-lib.sh"
+if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
+    source "$SCRIPT_DIR/ralph-lib.sh"
 else
     echo "Error: ralph-lib.sh not found. Please ensure Ralph is properly installed."
     exit 1
