@@ -1756,21 +1756,19 @@ ralph_claude() {
     local log_file
     log_file=$(ralph_get_full_output_log_path)
 
-    # Build the command with proper escaping
-    local cmd="claude"
-    for arg in "${claude_args[@]}"; do
-        cmd="$cmd $(printf '%q' "$arg")"
-    done
-
     if [[ "$capture_mode" == "true" ]]; then
         # Capture mode: collect output for return value
         local output
         if [[ "$verbose" -ge 2 ]]; then
-            # Verbose: show AND capture using process substitution
-            output=$(eval "$cmd" 2>&1 | tee >(cat >&2))
+            # Verbose: show AND capture
+            # Use a temp file to avoid process substitution issues
+            local temp_out=$(mktemp)
+            claude "${claude_args[@]}" 2>&1 | tee "$temp_out"
+            output=$(cat "$temp_out")
+            rm -f "$temp_out"
         else
             # Not verbose: silent capture
-            output=$(eval "$cmd" 2>&1)
+            output=$(claude "${claude_args[@]}" 2>&1)
         fi
 
         # Always log to file regardless of verbosity
@@ -1782,18 +1780,18 @@ ralph_claude() {
         # Direct streaming mode: output goes to console based on verbosity
         if [[ "$verbose" -ge 2 ]]; then
             # Full verbose: show everything in real-time
-            eval "$cmd" 2>&1 | tee -a "$log_file"
+            claude "${claude_args[@]}" 2>&1 | tee -a "$log_file"
         elif [[ "$verbose" -eq 1 ]]; then
             # Filtered: collect, show summary, log full
             local output
-            output=$(eval "$cmd" 2>&1)
+            output=$(claude "${claude_args[@]}" 2>&1)
             ralph_log_full_output "$session_id" 0 "$output"
 
             # Show filtered summary
             ralph_extract_output_summary "$output"
         else
             # Silent: only log to file
-            eval "$cmd" >> "$log_file" 2>&1
+            claude "${claude_args[@]}" >> "$log_file" 2>&1
         fi
     fi
 }

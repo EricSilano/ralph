@@ -157,12 +157,6 @@ else
 fi
 echo ""
 
-# Create .gitignore for context directory
-cat > "$CONTEXT_DIR/.gitignore" <<'EOF'
-# Context files are generated, not committed
-*.md
-EOF
-
 echo ""
 echo -e "${GREEN}✓ Context documentation generated successfully!${NC}"
 echo ""
