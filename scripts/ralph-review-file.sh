@@ -23,7 +23,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-# Source the ralph library for logging
+# Source the ralph library for logging and RALPH_MODEL
 if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
     source "$SCRIPT_DIR/ralph-lib.sh"
     ralph_info "Starting code review for specific files..."
@@ -52,7 +52,7 @@ echo "Reviewing $file_count file(s)..."
 echo ""
 
 # Run Claude code review
-claude --dangerously-skip-permissions "$file_refs
+claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 You are an expert code reviewer. Review these files for:
 

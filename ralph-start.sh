@@ -270,7 +270,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
     prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
     ralph_info "Generating PRD from your description..."
-    claude -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
+    claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
 
     echo -e "${GREEN}✓ PRD generated!${NC}"
     echo ""
@@ -319,7 +319,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
                 prd_prompt=$(ralph_load_template "prd-generation-prompt.md" "USER_DESCRIPTION=$description")
 
                 ralph_info "Regenerating PRD with additional details..."
-                claude -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
+                claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$prd_prompt" > "$PRD_FILE" 2>&1
                 echo ""
                 cat "$PRD_FILE"
                 echo ""
@@ -543,7 +543,7 @@ else
         fi
 
         echo "Running Claude code review..."
-        review_output=$(claude --dangerously-skip-permissions "$file_refs
+        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 $review_prompt" 2>&1)
 
@@ -595,7 +595,7 @@ $review_prompt" 2>&1)
         fi
 
         echo "Running Claude auto-fix..."
-        fix_output=$(claude --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 $fix_prompt" 2>&1)
 

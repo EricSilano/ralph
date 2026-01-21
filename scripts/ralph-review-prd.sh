@@ -51,7 +51,7 @@ for file in $source_files; do
 done
 
 # Run comprehensive review
-review_output=$(claude --dangerously-skip-permissions "$file_refs
+review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 You are a senior software architect and code reviewer.
 
@@ -111,7 +111,7 @@ case "$choice" in
         echo ""
         echo -e "${CYAN}Fixing issues automatically...${NC}"
 
-        claude --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 You are an expert software engineer.
 

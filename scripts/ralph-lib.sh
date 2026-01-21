@@ -8,6 +8,7 @@
 RALPH_LOG_LEVEL="${RALPH_LOG_LEVEL:-INFO}"
 RALPH_LOG_DIR="${RALPH_LOG_DIR:-logs}"
 RALPH_LOG_COLORS="${RALPH_LOG_COLORS:-true}"
+RALPH_MODEL="${RALPH_MODEL:-claude-opus-4-5-20251101}"
 
 # ==============================================================================
 # Log Level Definitions (compatible with bash 3.x)
@@ -1760,6 +1761,11 @@ ralph_claude() {
     if ! command -v claude &>/dev/null; then
         ralph_error "claude command not found in PATH"
         return 1
+    fi
+
+    # Prepend model flag if RALPH_MODEL is set
+    if [[ -n "$RALPH_MODEL" ]]; then
+        claude_args=("--model" "$RALPH_MODEL" "${claude_args[@]}")
     fi
 
     if [[ "$capture_mode" == "true" ]]; then

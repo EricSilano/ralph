@@ -122,15 +122,15 @@ for ((i=1; i<=$1; i++)); do
   full_prompt="$prompt_content"
 
   # Show the command being run
-  echo -e "${DIM}Running: claude --dangerously-skip-permissions \"\$full_prompt\"${NC}"
-  echo "Command: claude --dangerously-skip-permissions \"\$full_prompt\"" >> "$AFK_LOG"
+  echo -e "${DIM}Running: claude --model $RALPH_MODEL --dangerously-skip-permissions \"\$full_prompt\"${NC}"
+  echo "Command: claude --model $RALPH_MODEL --dangerously-skip-permissions \"\$full_prompt\"" >> "$AFK_LOG"
   echo "Full prompt content:" >> "$AFK_LOG"
   echo "$full_prompt" >> "$AFK_LOG"
 
   # Call claude with combined prompt - pass as direct string like gen-prd.sh
   # Capture both stdout and stderr, and track exit code
   set +e
-  result=$(claude --dangerously-skip-permissions "$full_prompt" 2>&1)
+  result=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_prompt" 2>&1)
   exit_code=$?
   set -e
 

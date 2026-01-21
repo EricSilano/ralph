@@ -42,7 +42,7 @@ for file in $modified_files $staged_files; do
 done
 
 # Run Claude code review
-claude --dangerously-skip-permissions "$file_refs
+claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 You are an expert code reviewer. Review these files for:
 

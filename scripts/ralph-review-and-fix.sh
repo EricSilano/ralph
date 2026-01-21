@@ -25,7 +25,7 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Source the ralph library for logging
+# Source the ralph library for logging and RALPH_MODEL
 if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
     source "$SCRIPT_DIR/ralph-lib.sh"
 fi
@@ -60,7 +60,7 @@ for ((iteration=1; iteration<=MAX_ITERATIONS; iteration++)); do
     done
 
     # Run code review and capture output
-    review_output=$(claude --dangerously-skip-permissions "$file_refs
+    review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 You are an expert code reviewer. Review these files for:
 
@@ -110,7 +110,7 @@ Format your response as:
     # Step 2: Fix the issues
     echo -e "${CYAN}Step 2: Fixing issues automatically...${NC}"
 
-    fix_output=$(claude --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+    fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
 
 You are an expert software engineer. A code review was performed and issues were found.
 

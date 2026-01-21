@@ -65,7 +65,7 @@ git diff --stat $(if [[ "$DIFF_TYPE" == "staged" ]]; then echo "--cached"; fi)
 echo ""
 
 # Run Claude code review on the diff
-claude --dangerously-skip-permissions "
+claude --model "$RALPH_MODEL" --dangerously-skip-permissions "
 Here is a git diff showing code changes:
 
 \`\`\`diff

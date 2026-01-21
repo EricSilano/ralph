@@ -51,7 +51,7 @@ if [[ -f "$ARCH_FILE" ]]; then
 else
     ralph_info "Generating context/ARCHITECTURE.md..."
     need_arch=true
-    claude -p --dangerously-skip-permissions "@$ARCH_PROMPT" > /dev/null 2>&1 &
+    claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$ARCH_PROMPT" > /dev/null 2>&1 &
     pids+=($!)
 fi
 
@@ -60,7 +60,7 @@ if [[ -f "$RULES_FILE" ]]; then
 else
     ralph_info "Generating context/BUSINESS_RULES.md..."
     need_rules=true
-    claude -p --dangerously-skip-permissions "@$RULES_PROMPT" > /dev/null 2>&1 &
+    claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$RULES_PROMPT" > /dev/null 2>&1 &
     pids+=($!)
 fi
 
@@ -69,7 +69,7 @@ if [[ -f "$GENERAL_FILE" ]]; then
 else
     ralph_info "Generating context/GENERAL.md..."
     need_general=true
-    claude -p --dangerously-skip-permissions "@$GENERAL_PROMPT" > /dev/null 2>&1 &
+    claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$GENERAL_PROMPT" > /dev/null 2>&1 &
     pids+=($!)
 fi
 
@@ -101,7 +101,7 @@ if [[ -f "$INDEX_FILE" ]] && [[ "$INDEX_FILE" -nt "$ARCH_FILE" ]] && [[ "$INDEX_
     ralph_info "✓ CLAUDE.md already exists and is up to date, skipping"
 else
     ralph_info "Generating context/CLAUDE.md index..."
-    claude -p --dangerously-skip-permissions "@$INDEX_PROMPT" > /dev/null 2>&1
+    claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$INDEX_PROMPT" > /dev/null 2>&1
 
     if [[ -f "$INDEX_FILE" ]]; then
         ralph_info "✓ CLAUDE.md created"

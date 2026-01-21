@@ -199,7 +199,7 @@ while true; do
         review_prompt=$(load_review_prompt "$iteration" "$all_files")
 
         # Run review with Claude
-        review_output=$(claude --dangerously-skip-permissions "$file_refs
+        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
 
 $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
 
@@ -242,7 +242,7 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
 
                 # Let Claude update the PRD with context (use -p for print mode to output to stdout)
                 ralph_info "Updating PRD based on oversight review..."
-                claude -p --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
+                claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
 
                 echo -e "${GREEN}  ✓ PRD updated${NC}" | tee -a "$MONITOR_LOG"
                 ralph_info "PRD updated based on oversight review"
