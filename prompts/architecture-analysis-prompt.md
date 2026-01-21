@@ -13,3 +13,5 @@ Focus on:
 Keep it SHORT and focused on the big picture. Use bullet points instead of paragraphs where possible. Skip introductory text and get straight to the facts.
 
 Format as markdown with clear sections.
+
+**CREATE THIS FILE: context/ARCHITECTURE.md**

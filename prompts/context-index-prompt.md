@@ -1,15 +1,14 @@
-Based on the following context files, create a concise index guide called CLAUDE.md.
+Read the context documentation files (context/ARCHITECTURE.md, context/BUSINESS_RULES.md, context/GENERAL.md) and create a concise index guide.
 
 IMPORTANT: Be extremely concise. Keep summaries short and to the point. No fluff or verbose explanations.
 
-Context files:
-{{CONTEXT_FILES_CONTENT}}
+**CREATE THIS FILE: context/CLAUDE.md**
 
 Create a guide document with this structure:
 
 # Context Documentation Guide
 
-**{{PROJECT_NAME}}** is [1-2 sentence project description based on what you learned].
+**[Project Name]** is [1-2 sentence project description based on what you learned from the context files].
 
 **When working on code changes, architecture, or features, check the relevant files below for detailed context and established patterns.**
 
@@ -17,7 +16,7 @@ Create a guide document with this structure:
 
 ## 📚 Available Files
 
-### **ARCHITECTURE.md**
+### **context/ARCHITECTURE.md**
 [2-3 sentence summary of what's in this file]
 
 **Use for:**
@@ -25,7 +24,7 @@ Create a guide document with this structure:
 
 ---
 
-### **BUSINESS_RULES.md**
+### **context/BUSINESS_RULES.md**
 [2-3 sentence summary of what's in this file]
 
 **Use for:**
@@ -33,7 +32,7 @@ Create a guide document with this structure:
 
 ---
 
-### **GENERAL.md**
+### **context/GENERAL.md**
 [2-3 sentence summary of what's in this file]
 
 **Use for:**

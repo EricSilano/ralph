@@ -15,3 +15,5 @@ Focus on:
 Keep it SHORT and practical. Use bullet points and lists instead of paragraphs. Skip introductory text and get straight to actionable information.
 
 Format as markdown with clear sections.
+
+**CREATE THIS FILE: context/GENERAL.md**

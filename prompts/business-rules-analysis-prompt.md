@@ -14,3 +14,5 @@ Focus on:
 Keep it SHORT and focused on the domain logic. Use bullet points and lists instead of long paragraphs. Skip introductory text and get straight to the rules.
 
 Format as markdown with clear sections.
+
+**CREATE THIS FILE: context/BUSINESS_RULES.md**
