@@ -22,11 +22,8 @@ fi
 
 ralph_info "Starting context documentation generation..."
 
-# Create context directory if it doesn't exist
-CONTEXT_DIR="$PROJECT_ROOT/context"
-mkdir -p "$CONTEXT_DIR"
-
 # Output files
+CONTEXT_DIR="$PROJECT_ROOT/context"
 ARCH_FILE="$CONTEXT_DIR/ARCHITECTURE.md"
 RULES_FILE="$CONTEXT_DIR/BUSINESS_RULES.md"
 GENERAL_FILE="$CONTEXT_DIR/GENERAL.md"
@@ -37,17 +34,20 @@ arch_prompt=$(ralph_load_template "architecture-analysis-prompt.md")
 rules_prompt=$(ralph_load_template "business-rules-analysis-prompt.md")
 general_prompt=$(ralph_load_template "general-context-prompt.md")
 
-# Run 3 claude instances in parallel
+# Create context directory if it doesn't exist
+mkdir -p "$CONTEXT_DIR"
+
+# Run 3 claude instances in parallel (capture output to avoid interactive prompts)
 ralph_info "Generating context/ARCHITECTURE.md..."
-claude --dangerously-skip-permissions "$arch_prompt" &
+(result1=$(claude --dangerously-skip-permissions "$arch_prompt" 2>&1)) &
 pid1=$!
 
 ralph_info "Generating context/BUSINESS_RULES.md..."
-claude --dangerously-skip-permissions "$rules_prompt" &
+(result2=$(claude --dangerously-skip-permissions "$rules_prompt" 2>&1)) &
 pid2=$!
 
 ralph_info "Generating context/GENERAL.md..."
-claude --dangerously-skip-permissions "$general_prompt" &
+(result3=$(claude --dangerously-skip-permissions "$general_prompt" 2>&1)) &
 pid3=$!
 
 # Wait for all to complete
@@ -67,7 +67,7 @@ index_prompt=$(ralph_load_template "context-index-prompt.md")
 
 # Generate CLAUDE.md index file
 ralph_info "Generating context/CLAUDE.md index..."
-claude --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt"
+result=$(claude --dangerously-skip-permissions "@$ARCH_FILE" "@$RULES_FILE" "@$GENERAL_FILE" "$index_prompt" 2>&1)
 
 if [[ -f "$INDEX_FILE" ]]; then
     ralph_info "Context documentation complete!"
