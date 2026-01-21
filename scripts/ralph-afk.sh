@@ -119,11 +119,7 @@ for ((i=1; i<=$1; i++)); do
   prompt_content=$(cat "$AFK_PROMPT")
 
   # Build the full prompt
-  full_prompt="$prd_content
-
-$progress_content
-
-$prompt_content"
+  full_prompt="$prompt_content"
 
   # Show the command being run
   echo -e "${DIM}Running: claude --dangerously-skip-permissions \"\$full_prompt\"${NC}"
