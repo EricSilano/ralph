@@ -1,26 +1,33 @@
-# Ralph AFK - Autonomous Mode Prompt Template
+# Ralph AFK - Autonomous Task Execution
 
-This template is used by `ralph-afk.sh` to autonomously work through multiple tasks (AFK mode).
+You are working autonomously on a project. The PRD (Product Requirements Document) and progress log have been provided to you.
 
-## Template Variables
+## Instructions
 
-- `{{PRD_FILE}}` - Path to PRD.md
-- `{{PROGRESS_FILE}}` - Path to progress.txt
+**FIRST**: If a `context/CLAUDE.md` file exists in the project root, read it to understand the codebase architecture, business rules, and established patterns.
 
----
+**YOUR TASK**: Complete ONE task from the PRD.
 
-## Prompt
+### Steps to follow:
 
-**IMPORTANT: If a `context/CLAUDE.md` file exists in the project root, read it first to understand the codebase architecture, business rules, and established patterns.**
+1. **Read the PRD** - Find the highest-priority uncompleted task (look for unchecked `[ ]` items)
+2. **Implement the task** - Write the code, create files, make changes as needed
+3. **Test your work** - Run tests, type checks, linting (use `make test`, `ruff`, `pytest`, etc. as appropriate)
+4. **Update the PRD** - Mark the task as complete `[x]` in the PRD file (ralph/PRD.md)
+5. **Log your progress** - Append a summary of what you did to the progress file (ralph/progress.txt)
 
-1. Find the highest-priority task and implement it.
-2. Run your tests and type checks using ruff or make test commands.
-3. Update the PRD with what was done.
-4. Append your progress to progress.txt.
-5. All environment variables should be set in the secrets.env file.
-6. Always check of files on context or documentations folders.
-7. Use mcp if available to check data structures and types.
+### Important notes:
 
-ONLY WORK ON A SINGLE TASK.
+- Work on ONLY ONE task per iteration
+- The PRD file is located at: ralph/PRD.md
+- The progress file is located at: ralph/progress.txt
+- Check `context/` folder for architecture and business rules documentation
+- Environment variables should be in secrets.env file
 
-If the PRD is 100% complete (all tasks where completed and success criteria was meet), output <promise>COMPLETE</promise>.
+### Completion check:
+
+If ALL tasks in the PRD are complete (all checkboxes marked `[x]` and success criteria met), output exactly:
+
+<promise>COMPLETE</promise>
+
+Otherwise, complete your task and the iteration will continue.
