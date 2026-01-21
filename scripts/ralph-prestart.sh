@@ -38,18 +38,28 @@ general_prompt=$(ralph_load_template "general-context-prompt.md")
 # Create context directory if it doesn't exist
 mkdir -p "$CONTEXT_DIR"
 
-# Run 3 claude instances sequentially (must be sequential for file creation)
-# Use -p (print mode) which skips workspace trust dialog and runs non-interactively
-ralph_info "Generating context/ARCHITECTURE.md..."
-claude -p --dangerously-skip-permissions "$arch_prompt" > /dev/null 2>&1
+# Run 3 claude instances in parallel using -p (print mode) for non-interactive execution
+ralph_info "Generating context files in parallel..."
+ralph_info "  - ARCHITECTURE.md"
+ralph_info "  - BUSINESS_RULES.md"
+ralph_info "  - GENERAL.md"
+
+claude -p --dangerously-skip-permissions "$arch_prompt" > /dev/null 2>&1 &
+pid1=$!
+
+claude -p --dangerously-skip-permissions "$rules_prompt" > /dev/null 2>&1 &
+pid2=$!
+
+claude -p --dangerously-skip-permissions "$general_prompt" > /dev/null 2>&1 &
+pid3=$!
+
+# Wait for all 3 to complete
+ralph_info "Waiting for all analyses to complete..."
+wait $pid1 $pid2 $pid3
+
+# Check results
 [[ -f "$ARCH_FILE" ]] && ralph_info "✓ ARCHITECTURE.md created" || ralph_warn "✗ ARCHITECTURE.md not found"
-
-ralph_info "Generating context/BUSINESS_RULES.md..."
-claude -p --dangerously-skip-permissions "$rules_prompt" > /dev/null 2>&1
 [[ -f "$RULES_FILE" ]] && ralph_info "✓ BUSINESS_RULES.md created" || ralph_warn "✗ BUSINESS_RULES.md not found"
-
-ralph_info "Generating context/GENERAL.md..."
-claude -p --dangerously-skip-permissions "$general_prompt" > /dev/null 2>&1
 [[ -f "$GENERAL_FILE" ]] && ralph_info "✓ GENERAL.md created" || ralph_warn "✗ GENERAL.md not found"
 
 ralph_info "All analysis complete"
