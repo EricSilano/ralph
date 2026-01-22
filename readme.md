@@ -26,7 +26,7 @@ This is the **original external Ralph Loop** — the one that keeps sessions fre
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/luisbebop/ralph.git
+git clone https://github.com/EricSilano/ralph.git
 
 # 2. Run setup to add ralph to your PATH
 cd ralph
