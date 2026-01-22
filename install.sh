@@ -83,7 +83,7 @@ logs/
 *~
 EOF
 
-# Add ralph/ and context/ to repository's .gitignore if not already present
+# Add ralph/ to repository's .gitignore if not already present
 echo "Checking repository .gitignore..."
 REPO_ROOT="$(cd "$INSTALL_DIR/.." && pwd)"
 REPO_GITIGNORE="$REPO_ROOT/.gitignore"
@@ -103,26 +103,13 @@ if [[ -f "$REPO_GITIGNORE" ]]; then
         echo "✓ Added $RALPH_BASENAME/ to repository .gitignore"
     fi
 
-    # Check if context/ is already in .gitignore
-    if grep -q "^context/\?$" "$REPO_GITIGNORE" 2>/dev/null; then
-        echo "✓ context/ already in repository .gitignore"
-    else
-        echo "Adding context/ to repository .gitignore..."
-        echo "" >> "$REPO_GITIGNORE"
-        echo "# Generated context documentation (regenerate with ralph-prestart)" >> "$REPO_GITIGNORE"
-        echo "context/" >> "$REPO_GITIGNORE"
-        echo "✓ Added context/ to repository .gitignore"
-    fi
 else
-    echo "Creating repository .gitignore with $RALPH_BASENAME/ and context/..."
+    echo "Creating repository .gitignore with $RALPH_BASENAME/..."
     cat > "$REPO_GITIGNORE" <<EOF
 # Ralph AI assistant directory
 $RALPH_BASENAME/
-
-# Generated context documentation (regenerate with ralph-prestart)
-context/
 EOF
-    echo "✓ Created repository .gitignore with $RALPH_BASENAME/ and context/"
+    echo "✓ Created repository .gitignore with $RALPH_BASENAME/"
 fi
 
 echo ""
