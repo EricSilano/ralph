@@ -27,6 +27,17 @@ PROGRESS_FILE="$RALPH_DIR/progress.txt"
 # Load ralph-once prompt from template
 once_prompt=$(ralph_load_template "ralph-once-prompt.md" "PRD_FILE=$PRD_FILE" "PROGRESS_FILE=$PROGRESS_FILE")
 
-IS_SANDBOX=1 claude --model "$RALPH_MODEL" --dangerously-skip-permissions "@$PRD_FILE @$PROGRESS_FILE
+# Read file contents
+prd_content=$(cat "$PRD_FILE")
+progress_content=$(cat "$PROGRESS_FILE")
 
+full_prompt="=== PRD ===
+$prd_content
+
+=== PROGRESS ===
+$progress_content
+
+=== INSTRUCTIONS ===
 $once_prompt"
+
+IS_SANDBOX=1 claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_prompt"

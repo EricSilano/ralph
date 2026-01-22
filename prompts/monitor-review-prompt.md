@@ -154,12 +154,15 @@ Choose ONE:
 
 #### PRD Adjustments Needed
 
-**IMPORTANT**: Only suggest PRD changes if truly needed for clarity or completeness.
+**IMPORTANT**: Write as little as possible on the PRD. Only suggest changes if truly needed for clarity or completeness. Less is more.
+
+**When adding tasks**: Keep them small and atomic (1-2 hours of work max each). Break complex work into multiple small, achievable tasks rather than one large task.
 
 If PRD needs updates:
 - **Issue**: [What's unclear or missing]
-- **Suggested Change**: [Specific addition or modification to PRD]
-- **Reason**: [Why this is needed]
+- **Suggested Change**: [Minimal, specific addition or modification - keep it brief]
+- **New Tasks** (if any): [Small, atomic tasks - 1-2 hours max each]
+- **Reason**: [Brief explanation - one sentence]
 - **Priority**: [HIGH/MEDIUM/LOW]
 
 If no changes needed, write:
@@ -198,9 +201,12 @@ NO_PRD_CHANGES_NEEDED
 - Only minor issues that can wait for review cycle
 
 ### When to Suggest PRD Changes
-✅ **YES**:
+
+**PRINCIPLE: Write as little as possible. Every PRD change should be minimal and necessary.**
+
+✅ **YES** (but keep changes minimal):
 - Requirements discovered during implementation (edge cases, error handling)
-- PRD task is too large and should be broken down
+- PRD task is too large and should be broken down into smaller, atomic tasks (1-2 hours max each)
 - Conflicting requirements discovered
 - Missing acceptance criteria causing confusion
 - Task order needs adjustment due to dependencies
@@ -210,6 +216,8 @@ NO_PRD_CHANGES_NEEDED
 - Personal preference on implementation approach
 - Stylistic concerns
 - Tasks that are clear and being implemented correctly
+- Adding unnecessary detail to already clear tasks
+- Verbose explanations when a simple task suffices
 
 ---
 
@@ -220,5 +228,7 @@ NO_PRD_CHANGES_NEEDED
 3. **Be Balanced**: Acknowledge what's going well, not just problems
 4. **Be Strategic**: Focus on high-level alignment, not micro-optimizations
 5. **Be Surgical**: Only suggest PRD changes that truly improve clarity or completeness
+6. **Be Minimal**: Write as little as possible on PRD changes - brevity is key
+7. **Be Atomic**: Any new tasks must be small and achievable (1-2 hours max each)
 
 You are the safety net that keeps Ralph on track. Focus on catching issues before they compound.

@@ -174,21 +174,32 @@ while true; do
         echo -e "${GREEN}  ✓ Changes detected. Reviewing...${NC}" | tee -a "$MONITOR_LOG"
         ralph_info "Changes detected: $all_files"
 
-        # Build file references for Claude
-        file_refs="@$PRD_FILE @$PROGRESS_FILE"
+        # Read PRD and progress file contents
+        prd_content=$(cat "$PRD_FILE")
+        progress_content=$(cat "$PROGRESS_FILE")
 
-        # Add changed files
+        # Build file contents for changed files
+        file_contents=""
         for file in $all_files; do
             if [[ -f "$file" ]] && [[ "$file" != "$MONITOR_LOG" ]]; then
-                file_refs="$file_refs @$file"
+                file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
             fi
         done
 
         # Add context folder files if they exist
+        context_contents=""
         if [[ -d "$CONTEXT_DIR" ]]; then
             echo "  📁 Reading context folder..." | tee -a "$MONITOR_LOG"
             while IFS= read -r -d '' context_file; do
-                file_refs="$file_refs @$context_file"
+                context_contents="$context_contents
+
+=== CONTEXT: $context_file ===
+$(cat "$context_file")
+=== END CONTEXT: $context_file ==="
             done < <(find "$CONTEXT_DIR" -type f \( -name "*.md" -o -name "*.txt" \) -print0 2>/dev/null)
         fi
 
@@ -198,10 +209,21 @@ while true; do
         # Load review prompt from template
         review_prompt=$(load_review_prompt "$iteration" "$all_files")
 
-        # Run review with Claude
-        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+        # Build full prompt
+        full_review_prompt="=== PRD ===
+$prd_content
 
-$review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
+=== PROGRESS ===
+$progress_content
+
+=== CHANGED FILES ===$file_contents
+$context_contents
+
+=== REVIEW INSTRUCTIONS ===
+$review_prompt"
+
+        # Run review with Claude
+        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
 
         # Save review output
         echo "---" >> "$MONITOR_LOG"
@@ -240,9 +262,17 @@ $review_prompt" 2>&1) || review_output="ERROR: Claude review failed"
                     "PROGRESS_FILE=$PROGRESS_FILE" \
                     "PRD_ADJUSTMENTS=$prd_adjustments")
 
-                # Let Claude update the PRD with context (use -p for print mode to output to stdout)
+                # Let Claude update the PRD with context
                 ralph_info "Updating PRD based on oversight review..."
-                claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "@$PRD_FILE" "@$PROGRESS_FILE" "$prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
+                full_prd_update_prompt="=== CURRENT PRD ===
+$prd_content
+
+=== PROGRESS ===
+$progress_content
+
+=== UPDATE INSTRUCTIONS ===
+$prd_update_prompt"
+                claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_prd_update_prompt" > "$PRD_FILE.tmp" 2>&1 && mv "$PRD_FILE.tmp" "$PRD_FILE" || ralph_error "Failed to update PRD"
 
                 echo -e "${GREEN}  ✓ PRD updated${NC}" | tee -a "$MONITOR_LOG"
                 ralph_info "PRD updated based on oversight review"

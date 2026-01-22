@@ -29,12 +29,16 @@ if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
     ralph_info "Starting code review for specific files..."
 fi
 
-# Build file list
-file_refs=""
+# Build file contents
+file_contents=""
 file_count=0
 for file in "$@"; do
     if [[ -f "$file" ]]; then
-        file_refs="$file_refs @$file"
+        file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
         file_count=$((file_count + 1))
         echo "  - $file"
     else
@@ -52,8 +56,9 @@ echo "Reviewing $file_count file(s)..."
 echo ""
 
 # Run Claude code review
-claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+full_prompt="=== FILES TO REVIEW ===$file_contents
 
+=== REVIEW INSTRUCTIONS ===
 You are an expert code reviewer. Review these files for:
 
 1. **Code Quality**: Best practices, readability, maintainability
@@ -80,3 +85,5 @@ Format your response as:
 ## Recommendations
 [General improvements]
 "
+
+claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_prompt"

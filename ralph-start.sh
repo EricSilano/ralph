@@ -513,18 +513,26 @@ if [[ -z "$all_files" ]]; then
     echo "  git diff HEAD~1"
     echo ""
 else
-    # Build file list for Claude
-    file_refs="@$PRD_FILE @$PROGRESS_FILE"
+    # Read PRD and progress file contents
+    prd_content=$(cat "$PRD_FILE")
+    progress_content=$(cat "$PROGRESS_FILE")
+
+    # Build file contents for review
+    file_contents=""
     file_count=0
     for file in $all_files; do
         if [[ -f "$file" ]] && [[ "$file" != "$REVIEW_LOG" ]] && [[ "$file" != "$FIX_LOG" ]]; then
-            file_refs="$file_refs @$file"
+            file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
             file_count=$((file_count + 1))
         fi
     done
 
     echo "Found $file_count files to review"
-    echo "Files will be passed to Claude with PRD and Progress files"
+    echo "Reading file contents for Claude..."
     echo ""
 
     # Run review-and-fix loop
@@ -543,9 +551,18 @@ else
         fi
 
         echo "Running Claude code review..."
-        review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
+        full_review_prompt="=== PRD ===
+$prd_content
 
-$review_prompt" 2>&1)
+=== PROGRESS ===
+$progress_content
+
+=== FILES TO REVIEW ===$file_contents
+
+=== REVIEW INSTRUCTIONS ===
+$review_prompt"
+
+        review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_review_prompt" 2>&1)
 
         review_exit_code=$?
 
@@ -595,9 +612,22 @@ $review_prompt" 2>&1)
         fi
 
         echo "Running Claude auto-fix..."
-        fix_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        review_log_content=$(cat "$REVIEW_LOG")
+        full_fix_prompt="=== PRD ===
+$prd_content
 
-$fix_prompt" 2>&1)
+=== PROGRESS ===
+$progress_content
+
+=== FILES TO FIX ===$file_contents
+
+=== REVIEW RESULTS ===
+$review_log_content
+
+=== FIX INSTRUCTIONS ===
+$fix_prompt"
+
+        fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_fix_prompt" 2>&1)
 
         fix_exit_code=$?
 

@@ -45,14 +45,32 @@ echo ""
 # Get all source files (customize based on your project)
 source_files=$(find . -type f \( -name "*.sh" -o -name "*.js" -o -name "*.ts" -o -name "*.py" -o -name "*.rb" \) ! -path "*/node_modules/*" ! -path "*/.git/*" 2>/dev/null | head -20)
 
-file_refs="@$PRD_FILE @$PROGRESS_FILE"
+# Read PRD and progress file contents
+prd_content=$(cat "$PRD_FILE")
+progress_content=$(cat "$PROGRESS_FILE")
+
+# Build file contents
+file_contents=""
 for file in $source_files; do
-    file_refs="$file_refs @$file"
+    if [[ -f "$file" ]]; then
+        file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
+    fi
 done
 
 # Run comprehensive review
-review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
+full_review_prompt="=== PRD ===
+$prd_content
 
+=== PROGRESS ===
+$progress_content
+
+=== SOURCE FILES ===$file_contents
+
+=== REVIEW INSTRUCTIONS ===
 You are a senior software architect and code reviewer.
 
 Review the current implementation against the PRD requirements:
@@ -85,7 +103,9 @@ Format:
 
 ## Recommendations
 [Next steps]
-")
+"
+
+review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_review_prompt" 2>&1)
 
 echo "$review_output" > "$REVIEW_LOG"
 echo "$review_output"
@@ -111,12 +131,23 @@ case "$choice" in
         echo ""
         echo -e "${CYAN}Fixing issues automatically...${NC}"
 
-        claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+        review_log_content=$(cat "$REVIEW_LOG")
+        full_fix_prompt="=== PRD ===
+$prd_content
 
+=== PROGRESS ===
+$progress_content
+
+=== SOURCE FILES ===$file_contents
+
+=== REVIEW RESULTS ===
+$review_log_content
+
+=== FIX INSTRUCTIONS ===
 You are an expert software engineer.
 
 A comprehensive code review found issues in the implementation.
-Review the findings in $REVIEW_LOG and fix ALL issues.
+Review the findings above and fix ALL issues.
 
 IMPORTANT: Do NOT modify the PRD.md file. The PRD is the source of truth and should not be changed.
 
@@ -144,6 +175,8 @@ Provide a summary:
 ## Verification
 - [How you verified fixes work]
 "
+
+        claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_fix_prompt"
 
         echo ""
         echo -e "${GREEN}✓ Fixes applied!${NC}"

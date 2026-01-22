@@ -33,17 +33,22 @@ fi
 echo "Reviewing modified and staged files..."
 echo ""
 
-# Build file list for Claude
-file_refs=""
+# Build file contents for Claude
+file_contents=""
 for file in $modified_files $staged_files; do
     if [[ -f "$file" ]]; then
-        file_refs="$file_refs @$file"
+        file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
     fi
 done
 
 # Run Claude code review
-claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$file_refs
+full_prompt="=== FILES TO REVIEW ===$file_contents
 
+=== REVIEW INSTRUCTIONS ===
 You are an expert code reviewer. Review these files for:
 
 1. **Code Quality**: Best practices, readability, maintainability
@@ -70,3 +75,5 @@ Format your response as:
 ## Recommendations
 [General improvements]
 "
+
+claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_prompt"

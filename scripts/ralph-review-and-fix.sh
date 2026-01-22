@@ -51,17 +51,22 @@ for ((iteration=1; iteration<=MAX_ITERATIONS; iteration++)); do
         break
     fi
 
-    # Build file list for Claude
-    file_refs=""
+    # Build file contents for Claude
+    file_contents=""
     for file in $modified_files $staged_files; do
         if [[ -f "$file" ]]; then
-            file_refs="$file_refs @$file"
+            file_contents="$file_contents
+
+=== FILE: $file ===
+$(cat "$file")
+=== END FILE: $file ==="
         fi
     done
 
     # Run code review and capture output
-    review_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs
+    full_review_prompt="=== FILES TO REVIEW ===$file_contents
 
+=== REVIEW INSTRUCTIONS ===
 You are an expert code reviewer. Review these files for:
 
 1. **Code Quality**: Best practices, readability, maintainability
@@ -89,7 +94,9 @@ Format your response as:
 
 ## Recommendations
 [General improvements]
-")
+"
+
+    review_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_review_prompt" 2>&1)
 
     # Save review output
     echo "$review_output" > "$REVIEW_LOG"
@@ -110,11 +117,16 @@ Format your response as:
     # Step 2: Fix the issues
     echo -e "${CYAN}Step 2: Fixing issues automatically...${NC}"
 
-    fix_output=$(claude --model "$RALPH_MODEL" -p --dangerously-skip-permissions "$file_refs @$REVIEW_LOG
+    review_log_content=$(cat "$REVIEW_LOG")
+    full_fix_prompt="=== FILES TO FIX ===$file_contents
 
+=== REVIEW RESULTS ===
+$review_log_content
+
+=== FIX INSTRUCTIONS ===
 You are an expert software engineer. A code review was performed and issues were found.
 
-Review the code review results in $REVIEW_LOG and fix ALL issues found.
+Review the code review results above and fix ALL issues found.
 
 IMPORTANT: Do NOT modify the PRD.md file. The PRD is the source of truth and should not be changed.
 
@@ -133,7 +145,9 @@ After fixing all issues, provide a summary:
 - [Any tests or checks performed]
 
 Be thorough and fix every issue mentioned in the review.
-")
+"
+
+    fix_output=$(claude --model "$RALPH_MODEL" --dangerously-skip-permissions "$full_fix_prompt" 2>&1)
 
     # Save fix output
     echo "$fix_output" > "$FIX_LOG"
